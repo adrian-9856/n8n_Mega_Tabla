@@ -1,0 +1,407 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "id": "91e37c02-55a3-4958-8f24-45199d262d73",
+      "name": "Auto-Sync Cada 6 Horas",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        160,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "formUIDs",
+              "value": "={{ [\"akz5K2bGfvvisQaE7VaHev\",\"auvEELWQEgiwF54W4pGpV5\",\"aF4nMQPqbHokM7rg2Vtf5w\",\"a5e8sJrazPBYXwTn6om35g\",\"aNpJWVRoxxQ5a8pwBQVJac\",\"agz54DYND9t65j87ZVawXJ\",\"a7fECFfTZLqfQifAcN8rFN\",\"aaiAih46xeGwR8YbSnwe7k\",\"aKPtMoCx6tFzagpLoWysuq\",\"aFYYHnU4BGs4stdTiLFENF\",\"azWEsFBnHSUvfVugsTcgTD\",\"aLNouQjf9UF7CJvDmRozCV\"] }}",
+              "type": "array"
+            },
+            {
+              "id": "a2",
+              "name": "koboToken",
+              "value": "64cc018b88067397addd36b09288be8b6539cf39",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "90e405b6-16c5-4ed3-9450-de6609d0583e",
+      "name": "Config Formularios",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        384,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "formUIDs",
+        "options": {}
+      },
+      "id": "08f1c7ae-c834-4e20-82e8-b23f6881d7cc",
+      "name": "Loop Formularios",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        608,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://kf.kobotoolbox.org/api/v2/assets/{{ $json.formUIDs }}/data/?format=json&limit=30000",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Token {{ $('Config Formularios').item.json.koboToken }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "bac8983a-7200-4eac-872a-4c83cd9a4b68",
+      "name": "Descargar Kobo",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        832,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "results",
+        "options": {}
+      },
+      "id": "7845af6c-5ec6-496a-b0b3-73dbba616109",
+      "name": "Expandir Registros",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.item.json;\n\nconst LIKERT = {\n  'totalmente de acuerdo':5,'muy de acuerdo':5,'completamente de acuerdo':5,\n  'de acuerdo':4,'bastante de acuerdo':4,\n  'ni de acuerdo ni en desacuerdo':3,'neutral':3,'indeciso':3,'indiferente':3,\n  'en desacuerdo':2,'poco de acuerdo':2,\n  'totalmente en desacuerdo':1,'muy en desacuerdo':1,'completamente en desacuerdo':1,\n  'siempre':5,'casi siempre':4,'a veces':3,'casi nunca':2,'nunca':1,\n  'frecuentemente':4,'ocasionalmente':3,'raramente':2,\n  'muy satisfecho':5,'muy satisfecha':5,'satisfecho':4,'satisfecha':4,\n  'regular':3,'insatisfecho':2,'insatisfecha':2,'muy insatisfecho':1,'muy insatisfecha':1,\n  'excelente':5,'muy bueno':4,'muy buena':4,'bueno':3,'buena':3,\n  'malo':2,'mala':2,'muy malo':1,'muy mala':1,\n  'mucho':5,'bastante':4,'algo':3,'poco':2,'nada':1,\n  'muy importante':5,'importante':4,'moderadamente importante':3,'poco importante':2,'sin importancia':1,\n  'muy probable':5,'probable':4,'posible':3,'poco probable':2,'improbable':1,\n  'si':1,'sí':1,'yes':1,'no':0\n};\n\nconst buscar = (claves) => {\n  for (const k of claves) {\n    if (raw[k] !== undefined && raw[k] !== null && raw[k] !== '') return String(raw[k]);\n  }\n  return '';\n};\n\nconst uid = raw['_xform_id_string'] || '';\nconst FORMS = {\n  'akz5K2bGfvvisQaE7VaHev':'C_01 Hoja de Interes 2025',\n  'auvEELWQEgiwF54W4pGpV5':'C_01 Hoja de Interes 2026',\n  'aF4nMQPqbHokM7rg2Vtf5w':'IL_01 Entrevista',\n  'a5e8sJrazPBYXwTn6om35g':'IL_02 Convenio',\n  'aNpJWVRoxxQ5a8pwBQVJac':'IL_03 Estipendios',\n  'agz54DYND9t65j87ZVawXJ':'IL_05.1 Pre-Test',\n  'a7fECFfTZLqfQifAcN8rFN':'IL_05.2 Post-Test',\n  'aaiAih46xeGwR8YbSnwe7k':'IL_05 Satisfaccion Formacion',\n  'aKPtMoCx6tFzagpLoWysuq':'IL_06 Satisfaccion Empleo',\n  'aFYYHnU4BGs4stdTiLFENF':'IL_07 Empleos Directos',\n  'azWEsFBnHSUvfVugsTcgTD':'IL_08 Acompanamiento',\n  'aLNouQjf9UF7CJvDmRozCV':'IL_Pre_Post Orientacion 2026'\n};\n\nconst nombre = buscar(['nombre_completo','nombre','name','full_name']);\nlet participante_id = '';\nif (nombre) {\n  let hash = 0;\n  const norm = nombre.toLowerCase().trim().replace(/\\s+/g,' ');\n  for (let i = 0; i < norm.length; i++) {\n    hash = ((hash << 5) - hash) + norm.charCodeAt(i);\n    hash |= 0;\n  }\n  participante_id = 'P' + Math.abs(hash).toString(36).toUpperCase().padStart(6,'0');\n}\n\nconst out = {\n  kobo_id:         String(raw['_id'] || ''),\n  participante_id,\n  formulario:      FORMS[uid] || uid,\n  fecha_envio:     raw['_submission_time'] ? raw['_submission_time'].substring(0,10) : '',\n  nombre_completo: nombre,\n  edad:            buscar(['edad','age']),\n  genero:          buscar(['genero','gender','sexo','sex']),\n  zona:            buscar(['zona','zone','area']),\n  colonia:         buscar(['colonia','neighborhood','barrio']),\n  nivel_educativo: buscar(['nivel_educativo','nivel_escolar','education','educacion']),\n};\n\nconst OMITIR = new Set(['_id','_xform_id_string','_submission_time','_uuid','_notes',\n  '_status','_submitted_by','_tags','_validation_status','_bamboo_dataset_id',\n  '_attachments','_geolocation','formhub','meta']);\n\nlet puntaje_total = 0, campos_escala = 0;\n\nfor (const [k, v] of Object.entries(raw)) {\n  if (OMITIR.has(k) || k in out) continue;\n  const valor = v !== null && v !== undefined ? String(v) : '';\n  out[k] = valor;\n  const lower = valor.toLowerCase().trim();\n  if (LIKERT[lower] !== undefined) {\n    out[k + '_num'] = LIKERT[lower];\n    puntaje_total += LIKERT[lower]; campos_escala++;\n  } else if (valor !== '' && !isNaN(parseFloat(valor)) && isFinite(valor)) {\n    const num = parseFloat(valor);\n    if (num >= 0 && num <= 10) {\n      out[k + '_num'] = num;\n      puntaje_total += num; campos_escala++;\n    }\n  }\n}\n\nif (campos_escala > 0) {\n  out.puntaje_total        = puntaje_total;\n  out.promedio_escala      = Math.round(puntaje_total / campos_escala * 100) / 100;\n  out.total_pregs_escala   = campos_escala;\n}\n\nreturn out;"
+      },
+      "id": "dd05a04e-0a5a-4e9c-a4ab-4f766ade1e8f",
+      "name": "Limpiar y Escalar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// =============================================\n// MEGA TABLA: Una fila por participante\n// con TODOS sus formularios consolidados\n// =============================================\n\nconst allItems = $input.all().map(i => i.json);\n\n// Lista de todos los formularios posibles\nconst TODOS_FORMULARIOS = [\n  'C_01 Hoja de Interes 2025',\n  'C_01 Hoja de Interes 2026',\n  'IL_01 Entrevista',\n  'IL_02 Convenio',\n  'IL_03 Estipendios',\n  'IL_05.1 Pre-Test',\n  'IL_05.2 Post-Test',\n  'IL_05 Satisfaccion Formacion',\n  'IL_06 Satisfaccion Empleo',\n  'IL_07 Empleos Directos',\n  'IL_08 Acompanamiento',\n  'IL_Pre_Post Orientacion 2026'\n];\n\n// Formularios que tienen escala Likert\nconst FORMS_CON_ESCALA = new Set([\n  'IL_05.1 Pre-Test',\n  'IL_05.2 Post-Test',\n  'IL_05 Satisfaccion Formacion',\n  'IL_06 Satisfaccion Empleo',\n  'IL_Pre_Post Orientacion 2026'\n]);\n\n// Agrupar todos los registros por participante_id\nconst porParticipante = {};\n\nfor (const reg of allItems) {\n  const pid = reg.participante_id;\n  if (!pid) continue;\n\n  if (!porParticipante[pid]) {\n    porParticipante[pid] = {\n      participante_id: pid,\n      nombre_completo: '',\n      edad: '',\n      genero: '',\n      zona: '',\n      colonia: '',\n      nivel_educativo: '',\n      formularios: {},\n      total_formularios: 0\n    };\n  }\n\n  const p = porParticipante[pid];\n\n  // Actualizar datos personales (tomar el mas reciente no vacio)\n  if (reg.nombre_completo) p.nombre_completo = reg.nombre_completo;\n  if (reg.edad) p.edad = reg.edad;\n  if (reg.genero) p.genero = reg.genero;\n  if (reg.zona) p.zona = reg.zona;\n  if (reg.colonia) p.colonia = reg.colonia;\n  if (reg.nivel_educativo) p.nivel_educativo = reg.nivel_educativo;\n\n  // Guardar info del formulario\n  const formName = reg.formulario || 'Desconocido';\n  p.formularios[formName] = {\n    fecha: reg.fecha_envio || '',\n    kobo_id: reg.kobo_id || '',\n    puntaje_total: reg.puntaje_total,\n    promedio_escala: reg.promedio_escala,\n    total_pregs_escala: reg.total_pregs_escala\n  };\n}\n\n// Construir la mega tabla\nconst megaTabla = [];\n\nfor (const pid of Object.keys(porParticipante).sort()) {\n  const p = porParticipante[pid];\n\n  const fila = {\n    participante_id: p.participante_id,\n    nombre_completo: p.nombre_completo,\n    edad: p.edad,\n    genero: p.genero,\n    zona: p.zona,\n    colonia: p.colonia,\n    nivel_educativo: p.nivel_educativo,\n    total_formularios_completados: Object.keys(p.formularios).length\n  };\n\n  // Para cada formulario, agregar columnas de estado\n  for (const form of TODOS_FORMULARIOS) {\n    // Nombre corto para la columna\n    const col = form.replace(/ /g, '_');\n    const info = p.formularios[form];\n\n    fila[col + '_completado'] = info ? 'Si' : 'No';\n    fila[col + '_fecha'] = info ? info.fecha : '';\n\n    // Si el formulario tiene escala, agregar puntajes\n    if (FORMS_CON_ESCALA.has(form)) {\n      fila[col + '_puntaje'] = info && info.puntaje_total !== undefined ? info.puntaje_total : '';\n      fila[col + '_promedio'] = info && info.promedio_escala !== undefined ? info.promedio_escala : '';\n      fila[col + '_total_preguntas'] = info && info.total_pregs_escala !== undefined ? info.total_pregs_escala : '';\n    }\n  }\n\n  // === Comparacion Pre-Test vs Post-Test ===\n  const pre = p.formularios['IL_05.1 Pre-Test'];\n  const post = p.formularios['IL_05.2 Post-Test'];\n\n  fila.tiene_pre_test = pre ? 'Si' : 'No';\n  fila.tiene_post_test = post ? 'Si' : 'No';\n  fila.tiene_ambos_tests = (pre && post) ? 'Si' : 'No';\n\n  if (pre && post && pre.puntaje_total !== undefined && post.puntaje_total !== undefined) {\n    fila.pre_puntaje = pre.puntaje_total;\n    fila.post_puntaje = post.puntaje_total;\n    fila.delta_puntaje = post.puntaje_total - pre.puntaje_total;\n    fila.pct_mejora = pre.puntaje_total > 0\n      ? Math.round((post.puntaje_total - pre.puntaje_total) / pre.puntaje_total * 100)\n      : 0;\n    fila.resultado_test = fila.delta_puntaje > 0 ? 'Mejoro'\n                        : fila.delta_puntaje < 0 ? 'Bajo'\n                        : 'Sin cambio';\n  } else {\n    fila.pre_puntaje = pre && pre.puntaje_total !== undefined ? pre.puntaje_total : '';\n    fila.post_puntaje = post && post.puntaje_total !== undefined ? post.puntaje_total : '';\n    fila.delta_puntaje = '';\n    fila.pct_mejora = '';\n    fila.resultado_test = pre && !post ? 'Pendiente Post-Test' : '';\n  }\n\n  // === Comparacion Pre/Post Orientacion 2026 ===\n  const orient = p.formularios['IL_Pre_Post Orientacion 2026'];\n  if (orient) {\n    fila.orientacion_2026_puntaje = orient.puntaje_total !== undefined ? orient.puntaje_total : '';\n    fila.orientacion_2026_promedio = orient.promedio_escala !== undefined ? orient.promedio_escala : '';\n  } else {\n    fila.orientacion_2026_puntaje = '';\n    fila.orientacion_2026_promedio = '';\n  }\n\n  // === Satisfaccion Formacion ===\n  const satForm = p.formularios['IL_05 Satisfaccion Formacion'];\n  if (satForm) {\n    fila.satisfaccion_formacion_puntaje = satForm.puntaje_total !== undefined ? satForm.puntaje_total : '';\n    fila.satisfaccion_formacion_promedio = satForm.promedio_escala !== undefined ? satForm.promedio_escala : '';\n  } else {\n    fila.satisfaccion_formacion_puntaje = '';\n    fila.satisfaccion_formacion_promedio = '';\n  }\n\n  // === Satisfaccion Empleo ===\n  const satEmp = p.formularios['IL_06 Satisfaccion Empleo'];\n  if (satEmp) {\n    fila.satisfaccion_empleo_puntaje = satEmp.puntaje_total !== undefined ? satEmp.puntaje_total : '';\n    fila.satisfaccion_empleo_promedio = satEmp.promedio_escala !== undefined ? satEmp.promedio_escala : '';\n  } else {\n    fila.satisfaccion_empleo_puntaje = '';\n    fila.satisfaccion_empleo_promedio = '';\n  }\n\n  megaTabla.push(fila);\n}\n\nif (megaTabla.length === 0) {\n  return [{ json: { sin_datos: 'No hay participantes registrados aun' } }];\n}\n\nreturn megaTabla.map(fila => ({ json: fila }));"
+      },
+      "id": "mega-tabla-001",
+      "name": "Crear Mega Tabla",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        -340
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const allItems = $input.all().map(i => i.json);\nconst registros = allItems || [];\n\nconst preTest  = registros.filter(r => r.formulario && r.formulario.includes('Pre-Test'));\nconst postTest = registros.filter(r => r.formulario && r.formulario.includes('Post-Test'));\n\nif (preTest.length === 0) return [{ json: { sin_datos: 'No hay registros Pre-Test aun' } }];\n\nconst numCols = preTest.length > 0\n  ? Object.keys(preTest[0]).filter(k => k.endsWith('_num'))\n  : [];\n\nconst resultado = preTest.map(pre => {\n  const post = postTest.find(p =>\n    (pre.participante_id && p.participante_id === pre.participante_id) ||\n    (pre.nombre_completo && p.nombre_completo &&\n     pre.nombre_completo.toLowerCase().trim() === p.nombre_completo.toLowerCase().trim())\n  );\n\n  const fila = {\n    participante_id:  pre.participante_id || '',\n    nombre_completo:  pre.nombre_completo || '',\n    edad:             pre.edad || '',\n    genero:           pre.genero || '',\n    zona:             pre.zona || '',\n    colonia:          pre.colonia || '',\n    nivel_educativo:  pre.nivel_educativo || '',\n    fecha_pre:        pre.fecha_envio || '',\n    fecha_post:       post ? post.fecha_envio || '' : '',\n    tiene_post_test:  post ? 'Si' : 'No',\n    puntaje_pre:      pre.puntaje_total !== undefined ? pre.puntaje_total : '',\n    puntaje_post:     post && post.puntaje_total !== undefined ? post.puntaje_total : '',\n    promedio_pre:     pre.promedio_escala !== undefined ? pre.promedio_escala : '',\n    promedio_post:    post && post.promedio_escala !== undefined ? post.promedio_escala : '',\n  };\n\n  if (post && pre.puntaje_total !== undefined && post.puntaje_total !== undefined) {\n    fila.delta_puntaje = post.puntaje_total - pre.puntaje_total;\n    fila.pct_mejora    = pre.puntaje_total > 0\n      ? Math.round(fila.delta_puntaje / pre.puntaje_total * 100) : 0;\n    fila.resultado     = fila.delta_puntaje > 0 ? 'Mejoro'\n                       : fila.delta_puntaje < 0 ? 'Bajo' : 'Sin cambio';\n  }\n\n  for (const col of numCols) {\n    const base = col.replace('_num','');\n    fila['pre_'   + base] = pre[col] !== undefined  ? pre[col]  : '';\n    fila['post_'  + base] = post && post[col] !== undefined ? post[col] : '';\n    if (post && pre[col] !== undefined && post[col] !== undefined) {\n      fila['delta_' + base] = post[col] - pre[col];\n    }\n  }\n\n  return { json: fila };\n});\n\nreturn resultado;"
+      },
+      "id": "b5185cb3-caaa-4a82-9ba4-f61bb09c01fc",
+      "name": "Crear PrePost",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        -48
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/edit?gid=0#gid=0",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com(?:\\/.*|)\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "kobo_id"
+          ],
+          "schema": [
+            {
+              "id": "kobo_id",
+              "displayName": "kobo_id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "197cbd14-37ad-4fae-a123-8f3496f91ca6",
+      "name": "Guardar Master Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        1504,
+        -540
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TFwSUqXRLocZsqX1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/edit?gid=0#gid=0",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com(?:\\/.*|)\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "MegaTabla",
+          "mode": "list",
+          "cachedResultName": "MegaTabla",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/edit#gid=MegaTabla"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "participante_id"
+          ],
+          "schema": [
+            {
+              "id": "participante_id",
+              "displayName": "participante_id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "guardar-mega-001",
+      "name": "Guardar Mega Tabla Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        1728,
+        -340
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TFwSUqXRLocZsqX1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/edit?gid=0#gid=0",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com(?:\\/.*|)\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1577403402,
+          "mode": "list",
+          "cachedResultName": "PrePost_Comparacion",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/edit#gid=1577403402"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "participante_id"
+          ],
+          "schema": [
+            {
+              "id": "participante_id",
+              "displayName": "participante_id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "f7d29770-e263-4449-8750-c1f49c73958e",
+      "name": "Guardar PrePost Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        1728,
+        -48
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TFwSUqXRLocZsqX1",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Auto-Sync Cada 6 Horas": {
+      "main": [
+        [
+          {
+            "node": "Config Formularios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config Formularios": {
+      "main": [
+        [
+          {
+            "node": "Loop Formularios",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Formularios": {
+      "main": [
+        [
+          {
+            "node": "Descargar Kobo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar Kobo": {
+      "main": [
+        [
+          {
+            "node": "Expandir Registros",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Expandir Registros": {
+      "main": [
+        [
+          {
+            "node": "Limpiar y Escalar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar y Escalar": {
+      "main": [
+        [
+          {
+            "node": "Guardar Master Sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Crear Mega Tabla",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Crear PrePost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear Mega Tabla": {
+      "main": [
+        [
+          {
+            "node": "Guardar Mega Tabla Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear PrePost": {
+      "main": [
+        [
+          {
+            "node": "Guardar PrePost Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dd5456d536f4f9389f54269a111e14fc76d554974f4087fbd82a4c8270c7003a"
+  }
+}
