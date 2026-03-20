@@ -1,35 +1,114 @@
-# Mega Tabla - Workflow n8n para KoboToolbox
+# Mega Tabla IL - Sistema de Consolidacion para Power BI
 
-## Que hace este workflow
+## Vision General
 
-Descarga datos de **12 formularios** de KoboToolbox cada 6 horas y genera **3 hojas** en Google Sheets:
+```
+participante_id = LLAVE MAESTRA que conecta todo
+         |
+    +----+----+----+----+----+
+    |         |         |         |         |
+ MegaTabla  Barismo  Terapia  Estudios  Empleo
+ (IL forms) (futuro) (futuro) (futuro)  (futuro)
+```
 
-### 1. Master (todas las respuestas individuales)
-- Cada fila = una respuesta de un formulario
-- Incluye datos limpios + escala Likert convertida a numeros
+Cada participante tiene UN `participante_id` unico. Este ID conecta la Mega Tabla
+con cualquier otro programa (barismo, terapia, estudios, empleo, cohortes, etc.)
+para que Power BI pueda hacer relaciones entre tablas.
 
-### 2. MegaTabla (UNA fila por participante)
-- **Consolida TODO** en una sola fila por persona
-- Columnas:
-  - `participante_id` - Identificador unico basado en el nombre
-  - `nombre_completo`, `edad`, `genero`, `zona`, `colonia`, `nivel_educativo`
-  - `total_formularios_completados` - Cuantos formularios lleno
-  - Para CADA formulario:
-    - `[formulario]_completado` → Si / No
-    - `[formulario]_fecha` → Fecha de envio
-    - `[formulario]_puntaje` → Puntaje total (solo si tiene escala)
-    - `[formulario]_promedio` → Promedio escala (solo si tiene escala)
-    - `[formulario]_total_preguntas` → Numero de preguntas de escala
-  - Comparacion Pre-Test vs Post-Test:
-    - `tiene_pre_test`, `tiene_post_test`, `tiene_ambos_tests`
-    - `pre_puntaje`, `post_puntaje`, `delta_puntaje`
-    - `pct_mejora` - Porcentaje de mejora
-    - `resultado_test` - "Mejoro", "Bajo", "Sin cambio", "Pendiente Post-Test"
-  - Resumen de satisfaccion (Formacion y Empleo)
+## Flujo del Workflow
 
-### 3. PrePost_Comparacion (detalle Pre vs Post Test)
-- Solo participantes con Pre-Test
-- Comparacion detallada pregunta por pregunta
+```
+Cada 6 horas
+    |
+Config Formularios (12 UIDs de Kobo + Token)
+    |
+Loop por cada formulario
+    |
+Descargar de KoboToolbox API
+    |
+Expandir registros individuales
+    |
+Limpiar + Escala Likert → numeros
+    |
+    +---> Guardar Master Sheet (cada respuesta = 1 fila)
+    |
+    +---> Crear Mega Tabla → Guardar Mega Tabla Sheet
+    |     (1 fila por participante, todo consolidado)
+    |
+    +---> Crear PrePost → Guardar PrePost Sheet
+          (comparacion detallada Pre vs Post Test)
+```
+
+## Columnas de la Mega Tabla (optimizadas para Power BI)
+
+### BLOQUE 1 - Datos del Participante (Dimension)
+| Columna | Descripcion | Uso en Power BI |
+|---------|-------------|-----------------|
+| `participante_id` | **LLAVE MAESTRA** - conecta con todas las tablas | Relacion/Clave |
+| `nombre_completo` | Nombre del participante | Etiqueta |
+| `edad` | Edad | Filtro/Segmentacion |
+| `genero` | Genero | Filtro/Segmentacion |
+| `zona` | Zona geografica | Filtro/Mapa |
+| `colonia` | Colonia | Filtro/Mapa |
+| `nivel_educativo` | Nivel de estudios | Filtro/Segmentacion |
+| `fecha_primer_contacto` | Primera vez que aparece | Eje temporal |
+| `fecha_ultimo_contacto` | Ultima actividad | Eje temporal |
+| `total_formularios` | Cuantos formularios lleno | KPI |
+
+### BLOQUE 2 - Estado por Formulario IL (Si/No + Fecha + Puntaje)
+Para cada formulario, columnas con prefijo `il_`:
+
+| Formulario | Columnas generadas | Tiene Escala |
+|------------|-------------------|:------------:|
+| Hoja Interes 2025 | `il_interes_2025_ok`, `_fecha` | No |
+| Hoja Interes 2026 | `il_interes_2026_ok`, `_fecha` | No |
+| Entrevista | `il_entrevista_ok`, `_fecha` | No |
+| Convenio | `il_convenio_ok`, `_fecha` | No |
+| Estipendios | `il_estipendios_ok`, `_fecha` | No |
+| Pre-Test | `il_pre_test_ok`, `_fecha`, `_puntaje`, `_promedio`, `_num_preguntas` | Si |
+| Post-Test | `il_post_test_ok`, `_fecha`, `_puntaje`, `_promedio`, `_num_preguntas` | Si |
+| Satisfaccion Formacion | `il_sat_formacion_ok`, `_fecha`, `_puntaje`, `_promedio`, `_num_preguntas` | Si |
+| Satisfaccion Empleo | `il_sat_empleo_ok`, `_fecha`, `_puntaje`, `_promedio`, `_num_preguntas` | Si |
+| Empleos Directos | `il_empleos_ok`, `_fecha` | No |
+| Acompanamiento | `il_acompanamiento_ok`, `_fecha` | No |
+| Orientacion 2026 | `il_orient_2026_ok`, `_fecha`, `_puntaje`, `_promedio`, `_num_preguntas` | Si |
+
+### BLOQUE 3 - Resumen de Avance (KPIs para dashboards)
+| Columna | Descripcion | Uso en Power BI |
+|---------|-------------|-----------------|
+| `pct_avance_formularios` | % de formularios completados (0-100) | Gauge/KPI |
+| `etapas_completadas` | Lista: Inscripcion, Ingreso, Proceso, etc. | Tooltip |
+| `num_etapas` | Numero de etapas completadas | KPI |
+| `estado_participante` | Inscrito / Ingresado / En Proceso / Egresado | Filtro principal |
+
+### BLOQUE 4 - Comparacion Pre-Test vs Post-Test
+| Columna | Descripcion | Uso en Power BI |
+|---------|-------------|-----------------|
+| `test_tiene_pre` | Si/No | Filtro |
+| `test_tiene_post` | Si/No | Filtro |
+| `test_tiene_ambos` | Si/No | Filtro |
+| `test_pre_puntaje` | Puntaje Pre-Test | Barra/Comparacion |
+| `test_post_puntaje` | Puntaje Post-Test | Barra/Comparacion |
+| `test_delta` | Diferencia Post - Pre | KPI |
+| `test_pct_cambio` | % de cambio | KPI |
+| `test_resultado` | Mejoro / Bajo / Sin cambio / Pendiente | Filtro/Color |
+
+### BLOQUE 5 - Satisfaccion
+| Columna | Descripcion |
+|---------|-------------|
+| `sat_formacion_promedio` | Promedio satisfaccion formacion (1-5) |
+| `sat_empleo_promedio` | Promedio satisfaccion empleo (1-5) |
+| `sat_promedio_general` | Promedio general de satisfaccion |
+
+### BLOQUE 6 - Campos Reservados (para futuras conexiones)
+| Columna | Para que sirve |
+|---------|----------------|
+| `programa_barismo` | Se llenara cuando se conecte programa barismo |
+| `programa_terapia` | Se llenara cuando se conecte programa terapia |
+| `programa_estudios` | Se llenara cuando se conecte programa estudios |
+| `programa_empleo` | Se llenara cuando se conecte programa empleo |
+| `cohorte` | Cohorte del participante |
+| `ultima_actualizacion` | Fecha de ultima sincronizacion |
 
 ## Como importar en n8n
 
@@ -40,25 +119,21 @@ Descarga datos de **12 formularios** de KoboToolbox cada 6 horas y genera **3 ho
 5. Verificar credenciales de Google Sheets
 6. Activar el workflow
 
-## Formularios incluidos
+## Como conectar con Power BI
 
-| Codigo | Nombre | Tiene Escala |
-|--------|--------|:------------:|
-| C_01 | Hoja de Interes 2025 | No |
-| C_01 | Hoja de Interes 2026 | No |
-| IL_01 | Entrevista | No |
-| IL_02 | Convenio | No |
-| IL_03 | Estipendios | No |
-| IL_05.1 | Pre-Test | Si |
-| IL_05.2 | Post-Test | Si |
-| IL_05 | Satisfaccion Formacion | Si |
-| IL_06 | Satisfaccion Empleo | Si |
-| IL_07 | Empleos Directos | No |
-| IL_08 | Acompanamiento | No |
-| IL_Pre_Post | Orientacion 2026 | Si |
+1. En Power BI Desktop: **Obtener datos** → **Google Sheets**
+2. Conectar la hoja **MegaTabla**
+3. El campo `participante_id` es la **clave** para relacionar con otras tablas
+4. Cuando agregues mas programas (barismo, terapia, etc.), crea nuevas hojas
+   con `participante_id` como columna comun y Power BI las relacionara
 
-## Requisitos previos
-
-- Crear la hoja **"MegaTabla"** en el Google Sheet destino
-- Las columnas se crean automaticamente la primera vez que corre
-- La columna clave para actualizar es `participante_id`
+### Modelo de datos sugerido para Power BI:
+```
+                    MegaTabla (IL)
+                         |
+                   participante_id
+                         |
+    +--------+-----------+-----------+--------+
+    |        |           |           |        |
+ Barismo  Terapia    Estudios    Empleo   Cohortes
+```
