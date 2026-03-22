@@ -133,6 +133,9 @@
         "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/Master:clear",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
         "options": {}
       },
       "id": "http-clear-master-001",
@@ -158,7 +161,7 @@
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ values: $json.values }) }}",
+        "jsonBody": "={{ JSON.stringify({ values: $('Preparar Master').first().json.values }) }}",
         "options": {}
       },
       "id": "http-append-master-001",
@@ -208,6 +211,9 @@
         "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/MegaTabla:clear",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
         "options": {}
       },
       "id": "http-clear-mega-001",
@@ -233,7 +239,7 @@
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ values: $json.values }) }}",
+        "jsonBody": "={{ JSON.stringify({ values: $('Preparar MegaTabla').first().json.values }) }}",
         "options": {}
       },
       "id": "http-append-mega-001",
@@ -283,6 +289,9 @@
         "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/PrePost_Comparacion:clear",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
         "options": {}
       },
       "id": "http-clear-prepost-001",
@@ -308,7 +317,7 @@
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ values: $json.values }) }}",
+        "jsonBody": "={{ JSON.stringify({ values: $('Preparar PrePost').first().json.values }) }}",
         "options": {}
       },
       "id": "http-append-prepost-001",
