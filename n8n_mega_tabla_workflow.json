@@ -123,7 +123,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1728,
+        1952,
         -144
       ]
     },
@@ -136,7 +136,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2400,
+        2848,
         -144
       ]
     },
@@ -236,7 +236,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [
-        2176,
+        2400,
         -144
       ],
       "credentials": {
@@ -289,7 +289,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [
-        2848,
+        3296,
         -144
       ],
       "credentials": {
@@ -322,7 +322,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [
-        1952,
+        2176,
         -144
       ],
       "credentials": {
@@ -355,7 +355,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [
-        2624,
+        3072,
         -144
       ],
       "credentials": {
@@ -364,6 +364,36 @@
           "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "parameters": {
+        "amount": 65,
+        "unit": "seconds"
+      },
+      "id": "wait-after-master-001",
+      "name": "Esperar Cuota 1",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1728,
+        -144
+      ],
+      "webhookId": "wait-cuota-1"
+    },
+    {
+      "parameters": {
+        "amount": 65,
+        "unit": "seconds"
+      },
+      "id": "wait-after-mega-001",
+      "name": "Esperar Cuota 2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2624,
+        -144
+      ],
+      "webhookId": "wait-cuota-2"
     }
   ],
   "connections": {
@@ -437,6 +467,17 @@
       "main": [
         [
           {
+            "node": "Esperar Cuota 1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Esperar Cuota 1": {
+      "main": [
+        [
+          {
             "node": "Crear Mega Tabla",
             "type": "main",
             "index": 0
@@ -467,6 +508,17 @@
       ]
     },
     "Guardar Mega Tabla Sheet": {
+      "main": [
+        [
+          {
+            "node": "Esperar Cuota 2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Esperar Cuota 2": {
       "main": [
         [
           {
