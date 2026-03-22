@@ -102,7 +102,8 @@
     },
     {
       "parameters": {
-        "jsCode": "const raw = $input.item.json;\n\nconst LIKERT = {\n  'totalmente de acuerdo':5,'muy de acuerdo':5,'completamente de acuerdo':5,\n  'de acuerdo':4,'bastante de acuerdo':4,\n  'ni de acuerdo ni en desacuerdo':3,'neutral':3,'indeciso':3,'indiferente':3,\n  'en desacuerdo':2,'poco de acuerdo':2,\n  'totalmente en desacuerdo':1,'muy en desacuerdo':1,'completamente en desacuerdo':1,\n  'siempre':5,'casi siempre':4,'a veces':3,'casi nunca':2,'nunca':1,\n  'frecuentemente':4,'ocasionalmente':3,'raramente':2,\n  'muy satisfecho':5,'muy satisfecha':5,'satisfecho':4,'satisfecha':4,\n  'regular':3,'insatisfecho':2,'insatisfecha':2,'muy insatisfecho':1,'muy insatisfecha':1,\n  'excelente':5,'muy bueno':4,'muy buena':4,'bueno':3,'buena':3,\n  'malo':2,'mala':2,'muy malo':1,'muy mala':1,\n  'mucho':5,'bastante':4,'algo':3,'poco':2,'nada':1,\n  'muy importante':5,'importante':4,'moderadamente importante':3,'poco importante':2,'sin importancia':1,\n  'muy probable':5,'probable':4,'posible':3,'poco probable':2,'improbable':1,\n  'si':1,'sí':1,'yes':1,'no':0\n};\n\nconst buscar = (claves) => {\n  for (const k of claves) {\n    if (raw[k] !== undefined && raw[k] !== null && raw[k] !== '') return String(raw[k]);\n  }\n  return '';\n};\n\nconst uid = raw['_xform_id_string'] || '';\nconst FORMS = {\n  'akz5K2bGfvvisQaE7VaHev':'C_01 Hoja de Interes 2025',\n  'auvEELWQEgiwF54W4pGpV5':'C_01 Hoja de Interes 2026',\n  'aF4nMQPqbHokM7rg2Vtf5w':'IL_01 Entrevista',\n  'a5e8sJrazPBYXwTn6om35g':'IL_02 Convenio',\n  'aNpJWVRoxxQ5a8pwBQVJac':'IL_03 Estipendios',\n  'agz54DYND9t65j87ZVawXJ':'IL_05.1 Pre-Test',\n  'a7fECFfTZLqfQifAcN8rFN':'IL_05.2 Post-Test',\n  'aaiAih46xeGwR8YbSnwe7k':'IL_05 Satisfaccion Formacion',\n  'aKPtMoCx6tFzagpLoWysuq':'IL_06 Satisfaccion Empleo',\n  'aFYYHnU4BGs4stdTiLFENF':'IL_07 Empleos Directos',\n  'azWEsFBnHSUvfVugsTcgTD':'IL_08 Acompanamiento',\n  'aLNouQjf9UF7CJvDmRozCV':'IL_Pre_Post Orientacion 2026'\n};\n\nconst nombre = buscar(['nombre_completo','nombre','name','full_name']);\nlet participante_id = '';\nif (nombre) {\n  let hash = 0;\n  const norm = nombre.toLowerCase().trim().replace(/\\s+/g,' ');\n  for (let i = 0; i < norm.length; i++) {\n    hash = ((hash << 5) - hash) + norm.charCodeAt(i);\n    hash |= 0;\n  }\n  participante_id = 'P' + Math.abs(hash).toString(36).toUpperCase().padStart(6,'0');\n}\n\nconst out = {\n  kobo_id:         String(raw['_id'] || ''),\n  participante_id,\n  formulario:      FORMS[uid] || uid,\n  fecha_envio:     raw['_submission_time'] ? raw['_submission_time'].substring(0,10) : '',\n  nombre_completo: nombre,\n  edad:            buscar(['edad','age']),\n  genero:          buscar(['genero','gender','sexo','sex']),\n  zona:            buscar(['zona','zone','area']),\n  colonia:         buscar(['colonia','neighborhood','barrio']),\n  nivel_educativo: buscar(['nivel_educativo','nivel_escolar','education','educacion']),\n};\n\nconst OMITIR = new Set(['_id','_xform_id_string','_submission_time','_uuid','_notes',\n  '_status','_submitted_by','_tags','_validation_status','_bamboo_dataset_id',\n  '_attachments','_geolocation','formhub','meta']);\n\nlet puntaje_total = 0, campos_escala = 0;\n\nfor (const [k, v] of Object.entries(raw)) {\n  if (OMITIR.has(k) || k in out) continue;\n  const valor = v !== null && v !== undefined ? String(v) : '';\n  out[k] = valor;\n  const lower = valor.toLowerCase().trim();\n  if (LIKERT[lower] !== undefined) {\n    out[k + '_num'] = LIKERT[lower];\n    puntaje_total += LIKERT[lower]; campos_escala++;\n  } else if (valor !== '' && !isNaN(parseFloat(valor)) && isFinite(valor)) {\n    const num = parseFloat(valor);\n    if (num >= 0 && num <= 10) {\n      out[k + '_num'] = num;\n      puntaje_total += num; campos_escala++;\n    }\n  }\n}\n\nif (campos_escala > 0) {\n  out.puntaje_total        = puntaje_total;\n  out.promedio_escala      = Math.round(puntaje_total / campos_escala * 100) / 100;\n  out.total_pregs_escala   = campos_escala;\n}\n\nreturn out;"
+        "mode": "runOnceForEachItem",
+        "jsCode": "const rawOriginal = $input.item.json;\n\n// --- Limpiar prefijos de grupo de KoboToolbox ---\n// Kobo envia campos como 'group_abc123/nombre_completo', extraemos solo el nombre del campo\nconst raw = {};\nfor (const [k, v] of Object.entries(rawOriginal)) {\n  const cleanKey = k.includes('/') ? k.split('/').pop() : k;\n  raw[cleanKey] = v;\n}\n\nconst LIKERT = {\n  'totalmente de acuerdo':5,'muy de acuerdo':5,'completamente de acuerdo':5,\n  'de acuerdo':4,'bastante de acuerdo':4,\n  'ni de acuerdo ni en desacuerdo':3,'neutral':3,'indeciso':3,'indiferente':3,\n  'en desacuerdo':2,'poco de acuerdo':2,\n  'totalmente en desacuerdo':1,'muy en desacuerdo':1,'completamente en desacuerdo':1,\n  'siempre':5,'casi siempre':4,'a veces':3,'casi nunca':2,'nunca':1,\n  'frecuentemente':4,'ocasionalmente':3,'raramente':2,\n  'muy satisfecho':5,'muy satisfecha':5,'satisfecho':4,'satisfecha':4,\n  'regular':3,'insatisfecho':2,'insatisfecha':2,'muy insatisfecho':1,'muy insatisfecha':1,\n  'excelente':5,'muy bueno':4,'muy buena':4,'bueno':3,'buena':3,\n  'malo':2,'mala':2,'muy malo':1,'muy mala':1,\n  'mucho':5,'bastante':4,'algo':3,'poco':2,'nada':1,\n  'muy importante':5,'importante':4,'moderadamente importante':3,'poco importante':2,'sin importancia':1,\n  'muy probable':5,'probable':4,'posible':3,'poco probable':2,'improbable':1,\n  'si':1,'sí':1,'yes':1,'no':0\n};\n\nconst buscar = (claves) => {\n  for (const k of claves) {\n    if (raw[k] !== undefined && raw[k] !== null && raw[k] !== '') return String(raw[k]);\n  }\n  return '';\n};\n\nconst uid = raw['_xform_id_string'] || '';\nconst FORMS = {\n  'akz5K2bGfvvisQaE7VaHev':'C_01 Hoja de Interes 2025',\n  'auvEELWQEgiwF54W4pGpV5':'C_01 Hoja de Interes 2026',\n  'aF4nMQPqbHokM7rg2Vtf5w':'IL_01 Entrevista',\n  'a5e8sJrazPBYXwTn6om35g':'IL_02 Convenio',\n  'aNpJWVRoxxQ5a8pwBQVJac':'IL_03 Estipendios',\n  'agz54DYND9t65j87ZVawXJ':'IL_05.1 Pre-Test',\n  'a7fECFfTZLqfQifAcN8rFN':'IL_05.2 Post-Test',\n  'aaiAih46xeGwR8YbSnwe7k':'IL_05 Satisfaccion Formacion',\n  'aKPtMoCx6tFzagpLoWysuq':'IL_06 Satisfaccion Empleo',\n  'aFYYHnU4BGs4stdTiLFENF':'IL_07 Empleos Directos',\n  'azWEsFBnHSUvfVugsTcgTD':'IL_08 Acompanamiento',\n  'aLNouQjf9UF7CJvDmRozCV':'IL_Pre_Post Orientacion 2026'\n};\n\nconst nombre = buscar(['nombre_completo','nombre','name','full_name']);\nlet participante_id = '';\nif (nombre) {\n  let hash = 0;\n  const norm = nombre.toLowerCase().trim().replace(/\\s+/g,' ');\n  for (let i = 0; i < norm.length; i++) {\n    hash = ((hash << 5) - hash) + norm.charCodeAt(i);\n    hash |= 0;\n  }\n  participante_id = 'P' + Math.abs(hash).toString(36).toUpperCase().padStart(6,'0');\n}\n\nconst out = {\n  kobo_id:         String(raw['_id'] || ''),\n  participante_id,\n  formulario:      FORMS[uid] || uid,\n  fecha_envio:     raw['_submission_time'] ? raw['_submission_time'].substring(0,10) : '',\n  nombre_completo: nombre,\n  edad:            buscar(['edad','age']),\n  genero:          buscar(['genero','gender','sexo','sex']),\n  zona:            buscar(['zona','zone','area']),\n  colonia:         buscar(['colonia','neighborhood','barrio']),\n  nivel_educativo: buscar(['nivel_educativo','nivel_escolar','education','educacion']),\n};\n\n// Campos de Kobo a omitir (metadatos internos)\nconst OMITIR = new Set(['_id','_xform_id_string','_submission_time','_uuid','_notes',\n  '_status','_submitted_by','_tags','_validation_status','_bamboo_dataset_id',\n  '_attachments','_geolocation','formhub','meta','__version__','_version_',\n  'meta/instanceID','instanceID','end','start','today','deviceid','phonenumber',\n  'nombre_completo','nombre','name','full_name','edad','age',\n  'genero','gender','sexo','sex','zona','zone','area',\n  'colonia','neighborhood','barrio','nivel_educativo','nivel_escolar','education','educacion']);\n\nlet puntaje_total = 0, campos_escala = 0;\n\nfor (const [k, v] of Object.entries(raw)) {\n  if (k.startsWith('_') || OMITIR.has(k) || k in out) continue;\n  if (typeof v === 'object' && v !== null) continue; // omitir objetos/arrays anidados\n  const valor = v !== null && v !== undefined ? String(v) : '';\n  if (valor === '') continue;\n  out[k] = valor;\n  const lower = valor.toLowerCase().trim();\n  if (LIKERT[lower] !== undefined) {\n    out[k + '_num'] = LIKERT[lower];\n    puntaje_total += LIKERT[lower]; campos_escala++;\n  } else if (!isNaN(parseFloat(valor)) && isFinite(valor)) {\n    const num = parseFloat(valor);\n    if (num >= 0 && num <= 10) {\n      out[k + '_num'] = num;\n      puntaje_total += num; campos_escala++;\n    }\n  }\n}\n\nif (campos_escala > 0) {\n  out.puntaje_total        = puntaje_total;\n  out.promedio_escala      = Math.round(puntaje_total / campos_escala * 100) / 100;\n  out.total_pregs_escala   = campos_escala;\n}\n\nreturn out;"
       },
       "id": "dd05a04e-0a5a-4e9c-a4ab-4f766ade1e8f",
       "name": "Limpiar y Escalar",
@@ -235,7 +236,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [
-        1728,
+        1952,
         -340
       ],
       "credentials": {
@@ -285,6 +286,74 @@
       },
       "id": "f7d29770-e263-4449-8750-c1f49c73958e",
       "name": "Guardar PrePost Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        1952,
+        -48
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TFwSUqXRLocZsqX1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/edit?gid=0#gid=0",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com(?:\\/.*|)\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "MegaTabla",
+          "mode": "list",
+          "cachedResultName": "MegaTabla",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/edit#gid=MegaTabla"
+        },
+        "clear": "exceptHeaders",
+        "options": {}
+      },
+      "id": "limpiar-mega-001",
+      "name": "Limpiar MegaTabla Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        1728,
+        -340
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TFwSUqXRLocZsqX1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/edit?gid=0#gid=0",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com(?:\\/.*|)\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1577403402,
+          "mode": "list",
+          "cachedResultName": "PrePost_Comparacion",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/edit#gid=1577403402"
+        },
+        "clear": "exceptHeaders",
+        "options": {}
+      },
+      "id": "limpiar-prepost-001",
+      "name": "Limpiar PrePost Sheet",
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [
@@ -380,6 +449,17 @@
       "main": [
         [
           {
+            "node": "Limpiar MegaTabla Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar MegaTabla Sheet": {
+      "main": [
+        [
+          {
             "node": "Guardar Mega Tabla Sheet",
             "type": "main",
             "index": 0
@@ -388,6 +468,17 @@
       ]
     },
     "Crear PrePost": {
+      "main": [
+        [
+          {
+            "node": "Limpiar PrePost Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar PrePost Sheet": {
       "main": [
         [
           {
