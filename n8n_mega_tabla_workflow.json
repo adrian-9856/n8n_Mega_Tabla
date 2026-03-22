@@ -195,7 +195,7 @@
     },
     {
       "parameters": {
-        "operation": "append",
+        "operation": "appendOrUpdate",
         "documentId": {
           "__rl": true,
           "mode": "url",
@@ -212,8 +212,20 @@
         "columns": {
           "mappingMode": "autoMapInputData",
           "value": {},
-          "matchingColumns": [],
-          "schema": [],
+          "matchingColumns": [
+            "participante_id"
+          ],
+          "schema": [
+            {
+              "id": "participante_id",
+              "displayName": "participante_id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
         },
@@ -236,7 +248,7 @@
     },
     {
       "parameters": {
-        "operation": "append",
+        "operation": "appendOrUpdate",
         "documentId": {
           "__rl": true,
           "mode": "url",
@@ -253,8 +265,20 @@
         "columns": {
           "mappingMode": "autoMapInputData",
           "value": {},
-          "matchingColumns": [],
-          "schema": [],
+          "matchingColumns": [
+            "participante_id"
+          ],
+          "schema": [
+            {
+              "id": "participante_id",
+              "displayName": "participante_id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
         },
