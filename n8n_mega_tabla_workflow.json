@@ -123,7 +123,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1952,
+        1728,
         -144
       ]
     },
@@ -136,13 +136,46 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2848,
+        2400,
         -144
       ]
     },
     {
       "parameters": {
-        "operation": "appendOrUpdate",
+        "operation": "clear",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/edit?gid=0#gid=0",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com(?:\\/.*|)\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Master",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "limpiar-master-001",
+      "name": "Limpiar Master Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.4,
+      "position": [
+        1392,
+        -144
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TFwSUqXRLocZsqX1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
         "documentId": {
           "__rl": true,
           "mode": "url",
@@ -159,20 +192,8 @@
         "columns": {
           "mappingMode": "autoMapInputData",
           "value": {},
-          "matchingColumns": [
-            "kobo_id"
-          ],
-          "schema": [
-            {
-              "id": "kobo_id",
-              "displayName": "kobo_id",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
+          "matchingColumns": [],
+          "schema": [],
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
         },
@@ -195,7 +216,7 @@
     },
     {
       "parameters": {
-        "operation": "appendOrUpdate",
+        "operation": "append",
         "documentId": {
           "__rl": true,
           "mode": "url",
@@ -212,20 +233,8 @@
         "columns": {
           "mappingMode": "autoMapInputData",
           "value": {},
-          "matchingColumns": [
-            "participante_id"
-          ],
-          "schema": [
-            {
-              "id": "participante_id",
-              "displayName": "participante_id",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
+          "matchingColumns": [],
+          "schema": [],
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
         },
@@ -236,7 +245,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [
-        2400,
+        2176,
         -144
       ],
       "credentials": {
@@ -248,7 +257,7 @@
     },
     {
       "parameters": {
-        "operation": "appendOrUpdate",
+        "operation": "append",
         "documentId": {
           "__rl": true,
           "mode": "url",
@@ -265,20 +274,8 @@
         "columns": {
           "mappingMode": "autoMapInputData",
           "value": {},
-          "matchingColumns": [
-            "participante_id"
-          ],
-          "schema": [
-            {
-              "id": "participante_id",
-              "displayName": "participante_id",
-              "required": false,
-              "defaultMatch": true,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
+          "matchingColumns": [],
+          "schema": [],
           "attemptToConvertTypes": false,
           "convertFieldsToString": true
         },
@@ -289,7 +286,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [
-        3296,
+        2848,
         -144
       ],
       "credentials": {
@@ -322,7 +319,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [
-        2176,
+        1952,
         -144
       ],
       "credentials": {
@@ -355,7 +352,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.4,
       "position": [
-        3072,
+        2624,
         -144
       ],
       "credentials": {
@@ -364,36 +361,6 @@
           "name": "Google Sheets account"
         }
       }
-    },
-    {
-      "parameters": {
-        "amount": 65,
-        "unit": "seconds"
-      },
-      "id": "wait-after-master-001",
-      "name": "Esperar Cuota 1",
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        1728,
-        -144
-      ],
-      "webhookId": "wait-cuota-1"
-    },
-    {
-      "parameters": {
-        "amount": 65,
-        "unit": "seconds"
-      },
-      "id": "wait-after-mega-001",
-      "name": "Esperar Cuota 2",
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        2624,
-        -144
-      ],
-      "webhookId": "wait-cuota-2"
     }
   ],
   "connections": {
@@ -456,6 +423,17 @@
       "main": [
         [
           {
+            "node": "Limpiar Master Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar Master Sheet": {
+      "main": [
+        [
+          {
             "node": "Guardar Master Sheet",
             "type": "main",
             "index": 0
@@ -464,17 +442,6 @@
       ]
     },
     "Guardar Master Sheet": {
-      "main": [
-        [
-          {
-            "node": "Esperar Cuota 1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Esperar Cuota 1": {
       "main": [
         [
           {
@@ -508,17 +475,6 @@
       ]
     },
     "Guardar Mega Tabla Sheet": {
-      "main": [
-        [
-          {
-            "node": "Esperar Cuota 2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Esperar Cuota 2": {
       "main": [
         [
           {
