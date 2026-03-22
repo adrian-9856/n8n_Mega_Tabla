@@ -315,7 +315,6 @@
           "cachedResultName": "MegaTabla",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/edit#gid=MegaTabla"
         },
-        "clear": "exceptHeaders",
         "options": {}
       },
       "id": "limpiar-mega-001",
@@ -349,7 +348,6 @@
           "cachedResultName": "PrePost_Comparacion",
           "cachedResultUrl": "https://docs.google.com/spreadsheets/d/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/edit#gid=1577403402"
         },
-        "clear": "exceptHeaders",
         "options": {}
       },
       "id": "limpiar-prepost-001",
