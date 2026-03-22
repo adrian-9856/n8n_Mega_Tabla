@@ -130,7 +130,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/Master:clear",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/%27Master%27:clear",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
@@ -156,7 +156,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/Master:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/%27Master%27:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
@@ -208,7 +208,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/MegaTabla:clear",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/%27MegaTabla%27:clear",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
@@ -234,7 +234,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/MegaTabla:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/%27MegaTabla%27:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
@@ -286,7 +286,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/PrePost_Comparacion:clear",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/%27PrePost_Comparacion%27:clear",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
@@ -312,7 +312,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/PrePost_Comparacion:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/%27PrePost_Comparacion%27:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
