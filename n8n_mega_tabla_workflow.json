@@ -334,6 +334,84 @@
           "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "// =====================================================\n// INDICADORES IL - Cálculo automático desde datos Kobo\n// =====================================================\nconst allItems = $('Limpiar y Escalar').all().map(i => i.json);\nconst megaItems = $('Crear Mega Tabla').all().map(i => i.json);\n\n// --- Helpers ---\nconst uniqueBy = (arr, field) => {\n  const seen = new Set();\n  return arr.filter(r => {\n    const v = r[field];\n    if (!v || v === '' || seen.has(v)) return false;\n    seen.add(v);\n    return true;\n  });\n};\n\nconst countUnique = (arr, field) => {\n  const s = new Set();\n  arr.forEach(r => { if (r[field] && r[field] !== '') s.add(r[field]); });\n  return s.size;\n};\n\n// --- Filtros por formulario ---\nconst hojaInteres = allItems.filter(r => r.formulario && r.formulario.includes('Hoja de Interes'));\nconst entrevista = allItems.filter(r => r.formulario && r.formulario.includes('Entrevista'));\nconst convenio = allItems.filter(r => r.formulario && r.formulario.includes('Convenio'));\nconst estipendios = allItems.filter(r => r.formulario && r.formulario.includes('Estipendios'));\nconst acomp = allItems.filter(r => r.formulario && r.formulario.includes('Acompanamiento'));\nconst satForm = allItems.filter(r => r.formulario && r.formulario.includes('Satisfaccion Formacion'));\nconst satEmpleo = allItems.filter(r => r.formulario && r.formulario.includes('Satisfaccion Empleo'));\nconst empleos = allItems.filter(r => r.formulario && r.formulario.includes('Empleos Directos'));\nconst preTest = allItems.filter(r => r.formulario && r.formulario.includes('Pre-Test'));\nconst postTest = allItems.filter(r => r.formulario && r.formulario.includes('Post-Test'));\nconst orientacion = allItems.filter(r => r.formulario && r.formulario.includes('Orientacion'));\nconst todosIL = allItems.filter(r => r.formulario && (r.formulario.startsWith('IL_') || r.formulario.includes('Interes')));\n\n// --- Desagregación helper ---\nconst desagregar = (registros) => {\n  const result = { total: countUnique(registros, 'creamos_id') };\n  \n  // Por género\n  const porGenero = {};\n  const unicos = uniqueBy(registros, 'creamos_id');\n  unicos.forEach(r => {\n    const g = (r.genero || 'Sin dato').trim();\n    porGenero[g] = (porGenero[g] || 0) + 1;\n  });\n  result.por_genero = Object.entries(porGenero).map(([k,v]) => k + ': ' + v).join(', ');\n  \n  // Por nivel educativo\n  const porNivel = {};\n  unicos.forEach(r => {\n    const n = (r.nivel_educativo || 'Sin dato').trim();\n    porNivel[n] = (porNivel[n] || 0) + 1;\n  });\n  result.por_nivel_educativo = Object.entries(porNivel).map(([k,v]) => k + ': ' + v).join(', ');\n  \n  return result;\n};\n\n// --- CALCULAR INDICADORES ---\nconst indicadores = [];\nconst hoy = new Date().toISOString().substring(0, 10);\n\n// IL.P.01 - Número de participantes en IL\nconst ilp01 = desagregar(todosIL);\nindicadores.push({\n  codigo: 'IL.P.01',\n  criterio: 'Pertinencia',\n  indicador: 'Número de participantes en IL',\n  valor: ilp01.total,\n  target_2026: 210,\n  pct_avance: Math.round(ilp01.total / 210 * 100),\n  por_genero: ilp01.por_genero,\n  por_nivel_educativo: ilp01.por_nivel_educativo,\n  fuente: 'Todos los formularios IL',\n  fecha_calculo: hoy\n});\n\n// IL.P.02 - Participantes con Acompañamiento Profesional\nconst ilp02 = desagregar(acomp);\nindicadores.push({\n  codigo: 'IL.P.02',\n  criterio: 'Pertinencia',\n  indicador: 'Participantes con Acompañamiento Profesional',\n  valor: ilp02.total,\n  target_2026: 122,\n  pct_avance: Math.round(ilp02.total / 122 * 100),\n  por_genero: ilp02.por_genero,\n  por_nivel_educativo: ilp02.por_nivel_educativo,\n  fuente: 'IL_08 Acompanamiento',\n  fecha_calculo: hoy\n});\n\n// IL.P.03 - Participantes en Formación Técnica\nconst ilp03 = desagregar(convenio);\nindicadores.push({\n  codigo: 'IL.P.03',\n  criterio: 'Pertinencia',\n  indicador: 'Participantes en Formación Técnica',\n  valor: ilp03.total,\n  target_2026: 188,\n  pct_avance: Math.round(ilp03.total / 188 * 100),\n  por_genero: ilp03.por_genero,\n  por_nivel_educativo: ilp03.por_nivel_educativo,\n  fuente: 'IL_02 Convenio',\n  fecha_calculo: hoy\n});\n\n// IL.P.04 - Personas alcanzadas (Hoja de Interés)\nconst ilp04 = desagregar(hojaInteres);\nindicadores.push({\n  codigo: 'IL.P.04',\n  criterio: 'Pertinencia',\n  indicador: 'Personas alcanzadas (Hoja de Interés)',\n  valor: ilp04.total,\n  target_2026: 250,\n  pct_avance: Math.round(ilp04.total / 250 * 100),\n  por_genero: ilp04.por_genero,\n  por_nivel_educativo: ilp04.por_nivel_educativo,\n  fuente: 'C_01 Hoja de Interes',\n  fecha_calculo: hoy\n});\n\n// IL.P.11 - Sesiones de Acompañamiento (total registros, no únicos)\nindicadores.push({\n  codigo: 'IL.P.11',\n  criterio: 'Eficiencia',\n  indicador: 'Sesiones de Acompañamiento brindadas',\n  valor: acomp.length,\n  target_2026: 'N/A',\n  pct_avance: '',\n  por_genero: '',\n  por_nivel_educativo: '',\n  fuente: 'IL_08 Acompanamiento',\n  fecha_calculo: hoy\n});\n\n// IL.R.01 - Satisfacción con formación técnica (promedio)\nconst satFormValues = satForm.filter(r => r.promedio_escala !== undefined).map(r => r.promedio_escala);\nconst satFormAvg = satFormValues.length > 0 ? Math.round(satFormValues.reduce((a,b) => a+b, 0) / satFormValues.length * 100) / 100 : '';\nconst ilr01_desag = desagregar(satForm);\nindicadores.push({\n  codigo: 'IL.R.01',\n  criterio: 'Pertinencia',\n  indicador: 'Satisfacción con formación técnica (promedio /5)',\n  valor: satFormAvg,\n  target_2026: '4/5',\n  pct_avance: satFormAvg ? Math.round(satFormAvg / 5 * 100) : '',\n  por_genero: ilr01_desag.por_genero,\n  por_nivel_educativo: ilr01_desag.por_nivel_educativo,\n  fuente: 'IL_05 Satisfaccion Formacion',\n  fecha_calculo: hoy\n});\n\n// IL.R.02 - Satisfacción con empleo (promedio)\nconst satEmpValues = satEmpleo.filter(r => r.promedio_escala !== undefined).map(r => r.promedio_escala);\nconst satEmpAvg = satEmpValues.length > 0 ? Math.round(satEmpValues.reduce((a,b) => a+b, 0) / satEmpValues.length * 100) / 100 : '';\nconst ilr02_desag = desagregar(satEmpleo);\nindicadores.push({\n  codigo: 'IL.R.02',\n  criterio: 'Pertinencia',\n  indicador: 'Satisfacción con empleo (promedio /5)',\n  valor: satEmpAvg,\n  target_2026: '4/5',\n  pct_avance: satEmpAvg ? Math.round(satEmpAvg / 5 * 100) : '',\n  por_genero: ilr02_desag.por_genero,\n  por_nivel_educativo: ilr02_desag.por_nivel_educativo,\n  fuente: 'IL_06 Satisfaccion Empleo',\n  fecha_calculo: hoy\n});\n\n// IL.R.06 - Cambio Pre/Post Test\nconst prePostPairs = preTest.map(pre => {\n  const post = postTest.find(p =>\n    (pre.creamos_id && pre.creamos_id !== '' && p.creamos_id === pre.creamos_id) ||\n    (pre.nombre_completo && p.nombre_completo &&\n     pre.nombre_completo.toLowerCase().trim() === p.nombre_completo.toLowerCase().trim())\n  );\n  return { pre, post };\n}).filter(pair => pair.post);\n\nconst conAmbos = prePostPairs.filter(p => p.pre.puntaje_total !== undefined && p.post.puntaje_total !== undefined);\nconst queAumentaron = conAmbos.filter(p => p.post.puntaje_total > p.pre.puntaje_total);\nconst pctAumento = conAmbos.length > 0 ? Math.round(queAumentaron.length / conAmbos.length * 100) : '';\n\n// También incluir Orientación Pre/Post\nconst orientPre = orientacion.filter(r => r.formulario && r.formulario.includes('Pre'));\nconst orientPost = orientacion.filter(r => r.formulario && r.formulario.includes('Post'));\n\nindicadores.push({\n  codigo: 'IL.R.06',\n  criterio: 'Eficacia',\n  indicador: 'Cambio Pre/Post Test - % que aumentó conocimiento',\n  valor: pctAumento !== '' ? pctAumento + '%' : 'Sin datos suficientes',\n  target_2026: '90%',\n  pct_avance: pctAumento,\n  por_genero: '',\n  por_nivel_educativo: '',\n  fuente: 'IL_05.1 Pre-Test + IL_05.2 Post-Test',\n  fecha_calculo: hoy,\n  detalle_pre_test: preTest.length + ' registros',\n  detalle_post_test: postTest.length + ' registros',\n  detalle_con_ambos: conAmbos.length + ' pares',\n  detalle_aumentaron: queAumentaron.length + ' participantes'\n});\n\n// IL.R.08 - Conexiones laborales\nconst ilr08 = desagregar(empleos);\nindicadores.push({\n  codigo: 'IL.R.08',\n  criterio: 'Eficacia',\n  indicador: 'Conexiones laborales (empleos directos)',\n  valor: ilr08.total,\n  target_2026: 61,\n  pct_avance: Math.round(ilr08.total / 61 * 100),\n  por_genero: ilr08.por_genero,\n  por_nivel_educativo: ilr08.por_nivel_educativo,\n  fuente: 'IL_07 Empleos Directos',\n  fecha_calculo: hoy\n});\n\n// --- RESUMEN GENERAL ---\nindicadores.push({\n  codigo: 'RESUMEN',\n  criterio: '',\n  indicador: 'Total participantes únicos en el sistema',\n  valor: countUnique(allItems, 'creamos_id'),\n  target_2026: '',\n  pct_avance: '',\n  por_genero: desagregar(allItems).por_genero,\n  por_nivel_educativo: desagregar(allItems).por_nivel_educativo,\n  fuente: 'Todos los formularios',\n  fecha_calculo: hoy\n});\n\nreturn indicadores.map(i => ({ json: i }));"
+      },
+      "id": "indicadores-il-001",
+      "name": "Calcular Indicadores IL",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3072,
+        156
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all().map(i => i.json);\nif (!items.length) return [{ json: { values: [], count: 0 } }];\nconst headers = Object.keys(items[0]);\nconst rows = items.map(row => headers.map(h => {\n  const v = row[h];\n  return v !== undefined && v !== null ? String(v) : '';\n}));\nreturn [{ json: { values: [headers, ...rows], count: items.length } }];"
+      },
+      "id": "prep-indicadores-001",
+      "name": "Preparar Indicadores",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3296,
+        156
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/%27Indicadores_IL%27:clear",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {}
+      },
+      "id": "http-clear-indicadores-001",
+      "name": "Limpiar Indicadores",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3520,
+        156
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TFwSUqXRLocZsqX1",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/11kTFGg912q6qG5eRrx_YEYOwCTjkmxCjhJB_LMTyVTk/values/%27Indicadores_IL%27:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ values: $('Preparar Indicadores').first().json.values }) }}",
+        "options": {}
+      },
+      "id": "http-append-indicadores-001",
+      "name": "Guardar Indicadores",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3744,
+        156
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TFwSUqXRLocZsqX1",
+          "name": "Google Sheets account"
+        }
+      }
     }
   ],
   "connections": {
@@ -476,6 +554,11 @@
             "node": "Crear PrePost",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Calcular Indicadores IL",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -507,6 +590,39 @@
         [
           {
             "node": "Guardar PrePost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular Indicadores IL": {
+      "main": [
+        [
+          {
+            "node": "Preparar Indicadores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Indicadores": {
+      "main": [
+        [
+          {
+            "node": "Limpiar Indicadores",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar Indicadores": {
+      "main": [
+        [
+          {
+            "node": "Guardar Indicadores",
             "type": "main",
             "index": 0
           }
