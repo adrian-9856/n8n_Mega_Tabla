@@ -416,7 +416,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "https://sheets.googleapis.com/v4/spreadsheets/1En60zjrwPTrSMFrLUWr2KgXmH7y3vcopfpQgy6lY3HU/values:batchGet?ranges=%27Lista%20Definitiva%27!A:Z&ranges=%27Cohortes%27!A:Z&ranges=%27Graduadx%27!A:Z&ranges=%27Retiradx%27!A:Z&ranges=%27Estipendios%27!A:Z",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1En60zjrwPTrSMFrLUWr2KgXmH7y3vcopfpQgy6lY3HU/values:batchGet?ranges=%27Lista%20Definitiva%27!A:Z&ranges=Cohortes!A:Z&ranges=Graduadx!A:Z&ranges=Retiradx!A:Z&ranges=Estipendios!A:Z",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "options": {}
@@ -439,7 +439,7 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "https://sheets.googleapis.com/v4/spreadsheets/1Ay1z3HdFHTzSjq7891sQVuEpIXBA8g9XGibjI-wFklc/values:batchGet?ranges=%27Lista%20Definitiva%27!A:Z&ranges=%27Cohortes%27!A:Z&ranges=%27Graduadx%27!A:Z&ranges=%27Retiradx%27!A:Z&ranges=%27Estipendios%27!A:Z",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1Ay1z3HdFHTzSjq7891sQVuEpIXBA8g9XGibjI-wFklc/values:batchGet?ranges=%27Lista%20Definitiva%27!A:Z&ranges=Cohortes!A:Z&ranges=Graduadx!A:Z&ranges=Retiradx!A:Z&ranges=Estipendios!A:Z",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "options": {}
