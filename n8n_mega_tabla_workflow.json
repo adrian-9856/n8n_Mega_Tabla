@@ -118,7 +118,7 @@
       "parameters": {
         "jsCode": "// Agregar todos los items en un solo array de valores para la API de Google Sheets\nconst items = $input.all().map(i => i.json);\nif (!items.length) return [{ json: { values: [], count: 0 } }];\n// Union de TODAS las keys (no solo las del primer item) para no perder columnas\nconst headerSet = new Set();\nitems.forEach(it => Object.keys(it).forEach(k => headerSet.add(k)));\nconst headers = Array.from(headerSet);\nconst rows = items.map(row => headers.map(h => {\n  const v = row[h];\n  return v !== undefined && v !== null ? String(v) : '';\n}));\nreturn [{ json: { values: [headers, ...rows], count: items.length } }];"
       },
-      "id": "prep-master-001",
+      "id": "6e705ce2-96ee-4880-b047-04487d2a31f3",
       "name": "Preparar Master",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -138,7 +138,7 @@
         "jsonBody": "{}",
         "options": {}
       },
-      "id": "http-clear-master-001",
+      "id": "31264b67-a964-4564-b4b2-d9c46ac0b533",
       "name": "Limpiar Master",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -164,7 +164,7 @@
         "jsonBody": "={{ JSON.stringify({ values: $('Preparar Master').first().json.values }) }}",
         "options": {}
       },
-      "id": "http-append-master-001",
+      "id": "1bacaab5-8b60-4377-a8d1-b04688abd339",
       "name": "Guardar Master",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -183,7 +183,7 @@
       "parameters": {
         "jsCode": "// =====================================================\n// MEGA TABLA IL - Una fila por participante (solo creamos_id)\n// =====================================================\nconst allItems = $('Limpiar y Escalar').all().map(i => i.json);\n\nconst FORMULARIOS_IL = [\n  { key: 'C_01 Hoja de Interes 2025', col: 'interes_2025',   escala: false, etapa: 'Inscripcion' },\n  { key: 'C_01 Hoja de Interes 2026', col: 'interes_2026',   escala: false, etapa: 'Inscripcion' },\n  { key: 'IL_01 Entrevista',          col: 'entrevista',     escala: false, etapa: 'Ingreso' },\n  { key: 'IL_02 Convenio',            col: 'convenio',       escala: false, etapa: 'Ingreso' },\n  { key: 'IL_03 Estipendios',         col: 'estipendios',    escala: false, etapa: 'Proceso' },\n  { key: 'IL_05.1 Pre-Test',          col: 'pre_test',       escala: true,  etapa: 'Evaluacion' },\n  { key: 'IL_05.2 Post-Test',         col: 'post_test',      escala: true,  etapa: 'Evaluacion' },\n  { key: 'IL_05 Satisfaccion Formacion', col: 'sat_formacion', escala: true, etapa: 'Satisfaccion' },\n  { key: 'IL_06 Satisfaccion Empleo', col: 'sat_empleo',     escala: true,  etapa: 'Satisfaccion' },\n  { key: 'IL_07 Empleos Directos',    col: 'empleos',        escala: false, etapa: 'Resultado' },\n  { key: 'IL_08 Acompanamiento',      col: 'acompanamiento', escala: false, etapa: 'Seguimiento' },\n  { key: 'IL_Pre_Post Orientacion 2026', col: 'orient_2026', escala: true,  etapa: 'Evaluacion' }\n];\n\n// Agrupar por creamos_id. Si no tiene creamos_id, intentar por nombre normalizado\nconst porParticipante = {};\n\nfor (const reg of allItems) {\n  // PRIVACIDAD: llave unica es creamos_id. Sin creamos_id el registro se descarta.\n  const pid = (reg.creamos_id && reg.creamos_id.trim() !== '') ? reg.creamos_id.trim() : '';\n  if (!pid) continue;\n  \n  if (!porParticipante[pid]) {\n    porParticipante[pid] = { datos: {}, formularios: {}, fechas: [] };\n  }\n  const p = porParticipante[pid];\n  \n  // Guardar solo campos demograficos (no PII) para desagregacion\n  const campos = ['edad','genero','nivel_educativo'];\n  for (const c of campos) {\n    if (reg[c] && reg[c] !== '') p.datos[c] = reg[c];\n  }\n  p.datos.creamos_id = pid;\n  \n  const formName = reg.formulario || '';\n  p.formularios[formName] = {\n    fecha: reg.fecha_envio || '', kobo_id: reg.kobo_id || '',\n    puntaje_total: reg.puntaje_total, promedio_escala: reg.promedio_escala,\n    total_pregs: reg.total_pregs_escala\n  };\n  if (reg.fecha_envio) p.fechas.push(reg.fecha_envio);\n}\n\nconst megaTabla = [];\nfor (const pid of Object.keys(porParticipante).sort()) {\n  const p = porParticipante[pid];\n  const d = p.datos;\n  const f = p.formularios;\n  const fechasOrd = p.fechas.sort();\n\n  const fila = {\n    Creamos_ID: d.creamos_id || pid,\n    Edad: d.edad || '',\n    Genero: d.genero || '',\n    Nivel_Educativo: d.nivel_educativo || '',\n    Fecha_Primer_Contacto: fechasOrd[0] || '',\n    Fecha_Ultimo_Contacto: fechasOrd[fechasOrd.length - 1] || '',\n    Anio_Ingreso: fechasOrd[0] ? fechasOrd[0].substring(0,4) : '',\n    Total_Formularios: Object.keys(f).length,\n  };\n\n  let etapasCompletadas = new Set();\n  for (const form of FORMULARIOS_IL) {\n    const info = f[form.key];\n    fila['IL_' + form.col + '_ok'] = info ? 'Si' : 'No';\n    fila['IL_' + form.col + '_fecha'] = info ? info.fecha : '';\n    if (info) etapasCompletadas.add(form.etapa);\n    if (form.escala) {\n      fila['IL_' + form.col + '_puntaje'] = info && info.puntaje_total !== undefined ? info.puntaje_total : '';\n      fila['IL_' + form.col + '_promedio'] = info && info.promedio_escala !== undefined ? info.promedio_escala : '';\n      fila['IL_' + form.col + '_num_preguntas'] = info && info.total_pregs !== undefined ? info.total_pregs : '';\n    }\n  }\n\n  const totalPosible = FORMULARIOS_IL.length;\n  fila.Pct_Avance_Formularios = Math.round(Object.keys(f).length / totalPosible * 100);\n  fila.Etapas_Completadas = Array.from(etapasCompletadas).sort().join(', ');\n  fila.Num_Etapas = etapasCompletadas.size;\n\n  if (etapasCompletadas.has('Resultado')) fila.Estado_Participante = 'Egresado';\n  else if (etapasCompletadas.has('Proceso') || etapasCompletadas.has('Evaluacion')) fila.Estado_Participante = 'En Proceso';\n  else if (etapasCompletadas.has('Ingreso')) fila.Estado_Participante = 'Ingresado';\n  else if (etapasCompletadas.has('Inscripcion')) fila.Estado_Participante = 'Inscrito';\n  else fila.Estado_Participante = 'Registrado';\n\n  const pre = f['IL_05.1 Pre-Test'];\n  const post = f['IL_05.2 Post-Test'];\n  fila.Test_Tiene_Pre = pre ? 'Si' : 'No';\n  fila.Test_Tiene_Post = post ? 'Si' : 'No';\n  fila.Test_Tiene_Ambos = (pre && post) ? 'Si' : 'No';\n  fila.Test_Pre_Puntaje = pre && pre.puntaje_total !== undefined ? pre.puntaje_total : '';\n  fila.Test_Post_Puntaje = post && post.puntaje_total !== undefined ? post.puntaje_total : '';\n  fila.Test_Pre_Promedio = pre && pre.promedio_escala !== undefined ? pre.promedio_escala : '';\n  fila.Test_Post_Promedio = post && post.promedio_escala !== undefined ? post.promedio_escala : '';\n\n  if (pre && post && pre.puntaje_total !== undefined && post.puntaje_total !== undefined) {\n    fila.Test_Delta = post.puntaje_total - pre.puntaje_total;\n    fila.Test_Pct_Cambio = pre.puntaje_total > 0 ? Math.round((post.puntaje_total - pre.puntaje_total) / pre.puntaje_total * 100) : 0;\n    fila.Test_Resultado = fila.Test_Delta > 0 ? 'Mejoro' : fila.Test_Delta < 0 ? 'Bajo' : 'Sin cambio';\n  } else {\n    fila.Test_Delta = ''; fila.Test_Pct_Cambio = '';\n    fila.Test_Resultado = pre && !post ? 'Pendiente Post-Test' : !pre && !post ? 'Sin Tests' : '';\n  }\n\n  const sf = f['IL_05 Satisfaccion Formacion'];\n  const se = f['IL_06 Satisfaccion Empleo'];\n  fila.Sat_Formacion_Promedio = sf && sf.promedio_escala !== undefined ? sf.promedio_escala : '';\n  fila.Sat_Empleo_Promedio = se && se.promedio_escala !== undefined ? se.promedio_escala : '';\n  const satValues = [sf, se].filter(s => s && s.promedio_escala !== undefined).map(s => s.promedio_escala);\n  fila.Sat_Promedio_General = satValues.length > 0 ? Math.round(satValues.reduce((a,b) => a+b, 0) / satValues.length * 100) / 100 : '';\n\n  // --- Programa Tecnico: join con datos de Tech + AyB ---\n  let progData = {};\n  try {\n    const consolidado = $('Consolidar Programas Tecnicos').first().json;\n    progData = (consolidado && consolidado.datos && consolidado.datos[pid]) || {};\n  } catch(e) { progData = {}; }\n\n  fila.Programa_Tecnico        = progData.Programa_Tecnico        || '';\n  fila.Cohorte                 = progData.Cohorte                 || '';\n  fila.Estado_Cohorte          = progData.Estado_Cohorte          || '';\n  fila.Fecha_Inicio_Cohorte    = progData.Fecha_Inicio_Cohorte    || '';\n  fila.Fecha_Fin_Cohorte       = progData.Fecha_Fin_Cohorte       || '';\n  fila.Estipendios_Recibidos   = progData.Estipendios_Recibidos   !== undefined ? progData.Estipendios_Recibidos : '';\n  fila.En_Lista_Definitiva     = progData.En_Lista_Definitiva     || 'No';\n  fila.En_Cohortes             = progData.En_Cohortes             || 'No';\n  fila.En_Graduadx             = progData.En_Graduadx             || 'No';\n  fila.En_Retiradx             = progData.En_Retiradx             || 'No';\n  fila.En_Estipendios          = progData.En_Estipendios          || 'No';\n\n  // Campos reservados para otros programas futuros\n  fila.Programa_Barismo = '';\n  fila.Programa_Terapia = '';\n  fila.Programa_Empleo  = '';\n  fila.Ultima_Actualizacion = new Date().toISOString().substring(0, 10);\n\n  megaTabla.push(fila);\n}\n\nif (megaTabla.length === 0) return [{ json: { sin_datos: 'No hay participantes' } }];\nreturn megaTabla.map(fila => ({ json: fila }));"
       },
-      "id": "mega-tabla-001",
+      "id": "4af22b5a-4972-47c7-ba41-94a2505be03d",
       "name": "Crear Mega Tabla",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -196,7 +196,7 @@
       "parameters": {
         "jsCode": "const items = $input.all().map(i => i.json);\nif (!items.length) return [{ json: { values: [], count: 0 } }];\nconst headerSet = new Set();\nitems.forEach(it => Object.keys(it).forEach(k => headerSet.add(k)));\nconst headers = Array.from(headerSet);\nconst rows = items.map(row => headers.map(h => {\n  const v = row[h];\n  return v !== undefined && v !== null ? String(v) : '';\n}));\nreturn [{ json: { values: [headers, ...rows], count: items.length } }];"
       },
-      "id": "prep-mega-001",
+      "id": "97bd30b7-a485-48b2-9a7c-7d6e6dbe71b6",
       "name": "Preparar MegaTabla",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -216,7 +216,7 @@
         "jsonBody": "{}",
         "options": {}
       },
-      "id": "http-clear-mega-001",
+      "id": "3809036c-43fe-4985-a338-b990f5b7de41",
       "name": "Limpiar MegaTabla",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -242,7 +242,7 @@
         "jsonBody": "={{ JSON.stringify({ values: $('Preparar MegaTabla').first().json.values }) }}",
         "options": {}
       },
-      "id": "http-append-mega-001",
+      "id": "0b0a35e1-e402-4eb3-9b5d-9c3b6be4bbd5",
       "name": "Guardar MegaTabla",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -274,7 +274,7 @@
       "parameters": {
         "jsCode": "const items = $input.all().map(i => i.json);\nif (!items.length) return [{ json: { values: [], count: 0 } }];\nconst headerSet = new Set();\nitems.forEach(it => Object.keys(it).forEach(k => headerSet.add(k)));\nconst headers = Array.from(headerSet);\nconst rows = items.map(row => headers.map(h => {\n  const v = row[h];\n  return v !== undefined && v !== null ? String(v) : '';\n}));\nreturn [{ json: { values: [headers, ...rows], count: items.length } }];"
       },
-      "id": "prep-prepost-001",
+      "id": "5421c54e-7870-41ef-9898-e107aecb1d21",
       "name": "Preparar PrePost",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -294,7 +294,7 @@
         "jsonBody": "{}",
         "options": {}
       },
-      "id": "http-clear-prepost-001",
+      "id": "99d13931-6d3d-405b-a123-6609727a0646",
       "name": "Limpiar PrePost",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -320,7 +320,7 @@
         "jsonBody": "={{ JSON.stringify({ values: $('Preparar PrePost').first().json.values }) }}",
         "options": {}
       },
-      "id": "http-append-prepost-001",
+      "id": "e31529d8-ecb5-4c0d-885a-d9a2fb09aa73",
       "name": "Guardar PrePost",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -339,7 +339,7 @@
       "parameters": {
         "jsCode": "// =====================================================\n// INDICADORES IL - Por Año + Columnas separadas Power BI\n// =====================================================\nconst allItems = $('Limpiar y Escalar').all().map(i => i.json);\n\n// --- Helpers ---\nconst countUnique = (arr, field) => {\n  const s = new Set();\n  arr.forEach(r => { if (r[field] && r[field] !== '') s.add(r[field]); });\n  return s.size;\n};\n\nconst uniqueBy = (arr, field) => {\n  const seen = new Set();\n  return arr.filter(r => {\n    const v = r[field];\n    if (!v || v === '' || seen.has(v)) return false;\n    seen.add(v);\n    return true;\n  });\n};\n\nconst getYear = (r) => {\n  if (r.fecha_envio && r.fecha_envio.length >= 4) return r.fecha_envio.substring(0, 4);\n  return 'Sin_Fecha';\n};\n\n// --- Detectar años disponibles ---\nconst yearSet = new Set();\nallItems.forEach(r => { const y = getYear(r); if (y !== 'Sin_Fecha') yearSet.add(y); });\nconst years = Array.from(yearSet).sort();\nyears.push('Total');\n\n// --- Filtros por formulario ---\nconst filterForm = (items, keyword) => items.filter(r => r.formulario && r.formulario.includes(keyword));\n\nconst formFilters = {\n  'Hoja_de_Interes': (items) => filterForm(items, 'Hoja de Interes'),\n  'Entrevista': (items) => filterForm(items, 'Entrevista'),\n  'Convenio': (items) => filterForm(items, 'Convenio'),\n  'Estipendios': (items) => filterForm(items, 'Estipendios'),\n  'Acompanamiento': (items) => filterForm(items, 'Acompanamiento'),\n  'Sat_Formacion': (items) => filterForm(items, 'Satisfaccion Formacion'),\n  'Sat_Empleo': (items) => filterForm(items, 'Satisfaccion Empleo'),\n  'Empleos_Directos': (items) => filterForm(items, 'Empleos Directos'),\n  'Pre_Test': (items) => filterForm(items, 'Pre-Test'),\n  'Post_Test': (items) => filterForm(items, 'Post-Test'),\n  'Todos_IL': (items) => items.filter(r => r.formulario && (r.formulario.startsWith('IL_') || r.formulario.includes('Interes')))\n};\n\n// --- Desagregación SEPARADA en columnas individuales ---\nconst desagregarColumnas = (registros) => {\n  const unicos = uniqueBy(registros, 'creamos_id');\n  const result = {};\n  \n  // Género - categorías CREAMOS (normalización flexible para KoboToolbox)\n  const generos = {};\n  unicos.forEach(r => {\n    let g = (r.genero || '').trim();\n    // Normalizar a minúsculas sin acentos para comparar\n    const gl = g.toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9]/g, ' ').replace(/\\s+/g, ' ').trim();\n    \n    if (gl === '' || gl === 'sin dato') g = 'Sin_Dato';\n    else if (gl.includes('trans') && (gl.includes('mujer') || gl.includes('fem'))) g = 'Trans_Mujer';\n    else if (gl.includes('trans') && (gl.includes('hombre') || gl.includes('masc'))) g = 'Trans_Hombre';\n    else if (gl.includes('mujer') || gl.includes('femenino') || gl.includes('fem') || gl === 'f' || gl === 'female') g = 'Mujer_Femenino';\n    else if (gl.includes('hombre') || gl.includes('masculino') || gl.includes('masc') || gl === 'm' || gl === 'male') g = 'Hombre_Masculino';\n    else if (gl.includes('no binari') || gl.includes('queer') || gl.includes('no conforme') || gl.includes('genero no')) g = 'No_Binarie_Queer';\n    else if (gl.includes('agenero') || gl.includes('a genero')) g = 'Agenero';\n    else if (gl.includes('autodescribir') || gl.includes('prefiero')) g = 'Autodescripcion';\n    else if (gl.includes('no quiere') || gl.includes('contestar') || gl.includes('prefiere no')) g = 'No_Quiere_Contestar';\n    else g = 'Otro';\n    generos[g] = (generos[g] || 0) + 1;\n  });\n  result.Genero_Mujer_Femenino = generos['Mujer_Femenino'] || 0;\n  result.Genero_Hombre_Masculino = generos['Hombre_Masculino'] || 0;\n  result.Genero_Trans_Mujer = generos['Trans_Mujer'] || 0;\n  result.Genero_Trans_Hombre = generos['Trans_Hombre'] || 0;\n  result.Genero_No_Binarie_Queer = generos['No_Binarie_Queer'] || 0;\n  result.Genero_Agenero = generos['Agenero'] || 0;\n  result.Genero_Autodescripcion = generos['Autodescripcion'] || 0;\n  result.Genero_No_Quiere_Contestar = generos['No_Quiere_Contestar'] || 0;\n  result.Genero_Sin_Dato = generos['Sin_Dato'] || 0;\n  \n  // Nivel educativo - cada valor en su columna\n  const niveles = {};\n  unicos.forEach(r => {\n    const n = (r.nivel_educativo || 'Sin_Dato').trim();\n    niveles[n] = (niveles[n] || 0) + 1;\n  });\n  result.Nivel_Primaria = niveles['Primaria'] || 0;\n  result.Nivel_Basico = niveles['Básico'] || niveles['Basico'] || 0;\n  result.Nivel_Diversificado = niveles['Diversificado'] || 0;\n  result.Nivel_Universitario = niveles['Universitario'] || 0;\n  result.Nivel_Sin_Dato = niveles['Sin_Dato'] || 0;\n  result.Nivel_Otro = 0;\n  const nivelesConocidos = ['Primaria','Básico','Basico','Diversificado','Universitario','Sin_Dato'];\n  Object.entries(niveles).forEach(([k,v]) => {\n    if (!nivelesConocidos.includes(k)) result.Nivel_Otro += v;\n  });\n  \n  // Rango de edad - cada rango en su columna\n  const edades = { 'Menor_18': 0, '18_24': 0, '25_30': 0, 'Mayor_30': 0, 'Sin_Dato': 0 };\n  unicos.forEach(r => {\n    const edad = parseInt(r.edad);\n    if (isNaN(edad)) { edades['Sin_Dato']++; }\n    else if (edad < 18) { edades['Menor_18']++; }\n    else if (edad <= 24) { edades['18_24']++; }\n    else if (edad <= 30) { edades['25_30']++; }\n    else { edades['Mayor_30']++; }\n  });\n  result.Edad_Menor_18 = edades['Menor_18'];\n  result.Edad_18_24 = edades['18_24'];\n  result.Edad_25_30 = edades['25_30'];\n  result.Edad_Mayor_30 = edades['Mayor_30'];\n  result.Edad_Sin_Dato = edades['Sin_Dato'];\n  \n  return result;\n};\n\n// --- Targets ---\nconst TARGETS = {\n  'IL.P.01': { Target_Compromiso: 210, Target_Aspiracional: 225 },\n  'IL.P.02': { Target_Compromiso: 122, Target_Aspiracional: 142 },\n  'IL.P.03': { Target_Compromiso: 188, Target_Aspiracional: 209 },\n  'IL.P.04': { Target_Compromiso: 250, Target_Aspiracional: 280 },\n  'IL.P.11': { Target_Compromiso: 0, Target_Aspiracional: 0 },\n  'IL.R.01': { Target_Compromiso: 4, Target_Aspiracional: 5 },\n  'IL.R.02': { Target_Compromiso: 4, Target_Aspiracional: 5 },\n  'IL.R.06': { Target_Compromiso: 90, Target_Aspiracional: 90 },\n  'IL.R.08': { Target_Compromiso: 61, Target_Aspiracional: 73 }\n};\n\n// --- CALCULAR INDICADORES POR AÑO ---\nconst indicadores = [];\nconst hoy = new Date().toISOString().substring(0, 10);\n\nconst calcularIndicador = (codigo, criterio, nombre, filterFn, tipo) => {\n  for (const year of years) {\n    const itemsYear = year === 'Total' ? allItems : allItems.filter(r => getYear(r) === year);\n    const filtered = filterFn(itemsYear);\n    \n    let valor = 0;\n    if (tipo === 'unique') {\n      valor = countUnique(filtered, 'creamos_id');\n    } else if (tipo === 'count') {\n      valor = filtered.length;\n    } else if (tipo === 'avg_escala') {\n      const vals = filtered.filter(r => r.promedio_escala !== undefined).map(r => r.promedio_escala);\n      valor = vals.length > 0 ? Math.round(vals.reduce((a,b) => a+b, 0) / vals.length * 100) / 100 : 0;\n    } else if (tipo === 'prepost') {\n      const pre = formFilters['Pre_Test'](itemsYear);\n      const post = formFilters['Post_Test'](itemsYear);\n      const pairs = pre.filter(pr => pr.creamos_id && pr.creamos_id.trim() !== '').map(pr => {\n        const po = post.find(p => p.creamos_id && p.creamos_id.trim() !== '' && p.creamos_id === pr.creamos_id);\n        return { pre: pr, post: po };\n      }).filter(p => p.post && p.pre.puntaje_total !== undefined && p.post.puntaje_total !== undefined);\n      \n      const improved = pairs.filter(p => p.post.puntaje_total > p.pre.puntaje_total);\n      valor = pairs.length > 0 ? Math.round(improved.length / pairs.length * 100) : 0;\n    }\n    \n    const targets = TARGETS[codigo] || {};\n    const targetVal = targets.Target_Compromiso;\n    const pctAvance = (targetVal && targetVal > 0 && valor > 0) ? Math.round(valor / targetVal * 100) : 0;\n    const desag = desagregarColumnas(filtered);\n    \n    indicadores.push({\n      Codigo: codigo,\n      Anio: year,\n      Criterio: criterio,\n      Indicador: nombre,\n      Valor: valor,\n      Target_Compromiso: targets.Target_Compromiso || 0,\n      Target_Aspiracional: targets.Target_Aspiracional || 0,\n      Pct_Avance: pctAvance,\n      Tipo_Medicion: tipo === 'avg_escala' ? 'Promedio' : tipo === 'prepost' ? 'Porcentaje' : tipo === 'count' ? 'Conteo' : 'Conteo_Unicos',\n      // --- Género (cada uno su columna) ---\n      Genero_Mujer_Femenino: desag.Genero_Mujer_Femenino,\n      Genero_Hombre_Masculino: desag.Genero_Hombre_Masculino,\n      Genero_Trans_Mujer: desag.Genero_Trans_Mujer,\n      Genero_Trans_Hombre: desag.Genero_Trans_Hombre,\n      Genero_No_Binarie_Queer: desag.Genero_No_Binarie_Queer,\n      Genero_Agenero: desag.Genero_Agenero,\n      Genero_Autodescripcion: desag.Genero_Autodescripcion,\n      Genero_No_Quiere_Contestar: desag.Genero_No_Quiere_Contestar,\n      Genero_Sin_Dato: desag.Genero_Sin_Dato,\n      // --- Nivel educativo (cada uno su columna) ---\n      Nivel_Primaria: desag.Nivel_Primaria,\n      Nivel_Basico: desag.Nivel_Basico,\n      Nivel_Diversificado: desag.Nivel_Diversificado,\n      Nivel_Universitario: desag.Nivel_Universitario,\n      Nivel_Otro: desag.Nivel_Otro,\n      Nivel_Sin_Dato: desag.Nivel_Sin_Dato,\n      // --- Rango de edad (cada uno su columna) ---\n      Edad_Menor_18: desag.Edad_Menor_18,\n      Edad_18_24: desag.Edad_18_24,\n      Edad_25_30: desag.Edad_25_30,\n      Edad_Mayor_30: desag.Edad_Mayor_30,\n      Edad_Sin_Dato: desag.Edad_Sin_Dato,\n      // --- Meta ---\n      Fecha_Calculo: hoy,\n      Nivel: 'IL'\n    });\n  }\n};\n\ncalcularIndicador('IL.P.01', 'Pertinencia', 'Participantes_en_IL', formFilters['Todos_IL'], 'unique');\ncalcularIndicador('IL.P.02', 'Pertinencia', 'Participantes_con_Acompanamiento', formFilters['Acompanamiento'], 'unique');\ncalcularIndicador('IL.P.03', 'Pertinencia', 'Participantes_Formacion_Tecnica', formFilters['Convenio'], 'unique');\ncalcularIndicador('IL.P.04', 'Pertinencia', 'Personas_Alcanzadas_Interes', formFilters['Hoja_de_Interes'], 'unique');\ncalcularIndicador('IL.P.11', 'Eficiencia', 'Sesiones_Acompanamiento', formFilters['Acompanamiento'], 'count');\ncalcularIndicador('IL.R.01', 'Pertinencia', 'Satisfaccion_Formacion_Promedio', formFilters['Sat_Formacion'], 'avg_escala');\ncalcularIndicador('IL.R.02', 'Pertinencia', 'Satisfaccion_Empleo_Promedio', formFilters['Sat_Empleo'], 'avg_escala');\ncalcularIndicador('IL.R.06', 'Eficacia', 'Cambio_PrePost_Pct_Mejora', formFilters['Pre_Test'], 'prepost');\ncalcularIndicador('IL.R.08', 'Eficacia', 'Conexiones_Laborales', formFilters['Empleos_Directos'], 'unique');\n\n// Resumen general por año\nfor (const year of years) {\n  const itemsYear = year === 'Total' ? allItems : allItems.filter(r => getYear(r) === year);\n  const desag = desagregarColumnas(itemsYear);\n  indicadores.push({\n    Codigo: 'RESUMEN',\n    Anio: year,\n    Criterio: '',\n    Indicador: 'Total_Participantes_Unicos',\n    Valor: countUnique(itemsYear, 'creamos_id'),\n    Target_Compromiso: 0,\n    Target_Aspiracional: 0,\n    Pct_Avance: 0,\n    Tipo_Medicion: 'Conteo_Unicos',\n    Genero_Mujer_Femenino: desag.Genero_Mujer_Femenino,\n    Genero_Hombre_Masculino: desag.Genero_Hombre_Masculino,\n    Genero_Trans_Mujer: desag.Genero_Trans_Mujer,\n    Genero_Trans_Hombre: desag.Genero_Trans_Hombre,\n    Genero_No_Binarie_Queer: desag.Genero_No_Binarie_Queer,\n    Genero_Agenero: desag.Genero_Agenero,\n    Genero_Autodescripcion: desag.Genero_Autodescripcion,\n    Genero_No_Quiere_Contestar: desag.Genero_No_Quiere_Contestar,\n    Genero_Sin_Dato: desag.Genero_Sin_Dato,\n    Nivel_Primaria: desag.Nivel_Primaria,\n    Nivel_Basico: desag.Nivel_Basico,\n    Nivel_Diversificado: desag.Nivel_Diversificado,\n    Nivel_Universitario: desag.Nivel_Universitario,\n    Nivel_Otro: desag.Nivel_Otro,\n    Nivel_Sin_Dato: desag.Nivel_Sin_Dato,\n    Edad_Menor_18: desag.Edad_Menor_18,\n    Edad_18_24: desag.Edad_18_24,\n    Edad_25_30: desag.Edad_25_30,\n    Edad_Mayor_30: desag.Edad_Mayor_30,\n    Edad_Sin_Dato: desag.Edad_Sin_Dato,\n    Fecha_Calculo: hoy,\n    Nivel: 'IL'\n  });\n}\n\n// --- Diagnóstico: valores únicos de género encontrados ---\nconst generoRaw = {};\nallItems.forEach(r => {\n  const g = (r.genero || '(vacio)').trim();\n  generoRaw[g] = (generoRaw[g] || 0) + 1;\n});\nindicadores.push({\n  Codigo: 'DIAGNOSTICO',\n  Anio: 'N/A',\n  Criterio: 'debug',\n  Indicador: 'Valores_Genero_Raw',\n  Valor: Object.entries(generoRaw).map(([k,v]) => k + '=' + v).join(' | '),\n  Target_Compromiso: 0,\n  Target_Aspiracional: 0,\n  Pct_Avance: 0,\n  Tipo_Medicion: 'debug',\n  Genero_Mujer_Femenino: 0, Genero_Hombre_Masculino: 0,\n  Genero_Trans_Mujer: 0, Genero_Trans_Hombre: 0,\n  Genero_No_Binarie_Queer: 0, Genero_Agenero: 0,\n  Genero_Autodescripcion: 0, Genero_No_Quiere_Contestar: 0,\n  Genero_Sin_Dato: 0,\n  Nivel_Primaria: 0, Nivel_Basico: 0, Nivel_Diversificado: 0,\n  Nivel_Universitario: 0, Nivel_Otro: 0, Nivel_Sin_Dato: 0,\n  Edad_Menor_18: 0, Edad_18_24: 0, Edad_25_30: 0,\n  Edad_Mayor_30: 0, Edad_Sin_Dato: 0,\n  Fecha_Calculo: hoy, Nivel: 'debug'\n});\n\nreturn indicadores.map(i => ({ json: i }));"
       },
-      "id": "indicadores-il-001",
+      "id": "0710e06e-9a4e-401f-808b-aff514768d66",
       "name": "Calcular Indicadores IL",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -352,7 +352,7 @@
       "parameters": {
         "jsCode": "const items = $input.all().map(i => i.json);\nif (!items.length) return [{ json: { values: [], count: 0 } }];\nconst headerSet = new Set();\nitems.forEach(it => Object.keys(it).forEach(k => headerSet.add(k)));\nconst headers = Array.from(headerSet);\nconst rows = items.map(row => headers.map(h => {\n  const v = row[h];\n  return v !== undefined && v !== null ? String(v) : '';\n}));\nreturn [{ json: { values: [headers, ...rows], count: items.length } }];"
       },
-      "id": "prep-indicadores-001",
+      "id": "1a1430be-4863-4090-91f3-17aa444d2d02",
       "name": "Preparar Indicadores",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -372,7 +372,7 @@
         "jsonBody": "{}",
         "options": {}
       },
-      "id": "http-clear-indicadores-001",
+      "id": "6dbeddab-948f-499c-b121-50a4ea6eb841",
       "name": "Limpiar Indicadores",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -398,7 +398,7 @@
         "jsonBody": "={{ JSON.stringify({ values: $('Preparar Indicadores').first().json.values }) }}",
         "options": {}
       },
-      "id": "http-append-indicadores-001",
+      "id": "8575d8a9-2640-4a85-9c8d-f047a607aae8",
       "name": "Guardar Indicadores",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -421,7 +421,7 @@
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "options": {}
       },
-      "id": "descargar-tech-001",
+      "id": "74438c70-2844-4f51-bda4-b4363027d3fe",
       "name": "Descargar Tech Sheets",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -444,7 +444,7 @@
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "options": {}
       },
-      "id": "descargar-ayb-001",
+      "id": "7d95a6c4-af5a-47b0-8d94-2150f02e7920",
       "name": "Descargar AyB Sheets",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.1,
@@ -463,7 +463,7 @@
       "parameters": {
         "jsCode": "// =====================================================\n// CONSOLIDAR PROGRAMAS TECNICOS (Tech + AyB)\n// Lee: Lista Definitiva, Cohortes, Graduadx, Retiradx, Estipendios\n// Une por creamos_id - sin almacenar PII\n// =====================================================\n\nconst norm = (s) => (s || '').toLowerCase().normalize('NFD')\n  .replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9]/g, '_')\n  .replace(/_+/g, '_').replace(/^_|_$/g, '');\n\n// Convierte valueRange de Sheets API a array de objetos usando primera fila como headers\nconst parseSheet = (valueRange) => {\n  const rows = (valueRange && valueRange.values) ? valueRange.values : [];\n  if (rows.length < 2) return [];\n  const headers = rows[0].map(h => norm(h));\n  return rows.slice(1).map(row => {\n    const obj = {};\n    headers.forEach((h, i) => { if (h) obj[h] = (row[i] !== undefined ? String(row[i]) : ''); });\n    return obj;\n  }).filter(r => r.creamos_id && r.creamos_id.trim() !== '');\n};\n\nconst techResponse = $('Descargar Tech Sheets').first().json;\nconst aybResponse  = $('Descargar AyB Sheets').first().json;\n\nconst techRanges = techResponse.valueRanges || [];\nconst aybRanges  = aybResponse.valueRanges  || [];\n\n// Orden de pestanas pedidas: Lista Definitiva, Cohortes, Graduadx, Retiradx, Estipendios\nconst TABS = ['Lista_Definitiva', 'Cohortes', 'Graduadx', 'Retiradx', 'Estipendios'];\n\nconst datos = {}; // mapa creamos_id -> datos del programa tecnico\n\nconst procesarRanges = (ranges, programa) => {\n  ranges.forEach((vr, i) => {\n    const tabName = TABS[i] || 'Otro';\n    const rows = parseSheet(vr);\n\n    rows.forEach(r => {\n      const cid = r.creamos_id.trim();\n      if (!datos[cid]) {\n        datos[cid] = {\n          Programa_Tecnico:      '',\n          Cohorte:               '',\n          Estado_Cohorte:        '',\n          Fecha_Inicio_Cohorte:  '',\n          Fecha_Fin_Cohorte:     '',\n          Estipendios_Recibidos: 0,\n          En_Lista_Definitiva:   'No',\n          En_Cohortes:           'No',\n          En_Graduadx:           'No',\n          En_Retiradx:           'No',\n          En_Estipendios:        'No',\n          _programas:            []\n        };\n      }\n      const d = datos[cid];\n\n      if (tabName === 'Lista_Definitiva') {\n        d.En_Lista_Definitiva = 'Si';\n        if (!d.Programa_Tecnico) d.Programa_Tecnico = programa;\n        // Intentar capturar estado y cohorte con nombres flexibles\n        const estado = r.estado || r.status || r.situacion || r.condicion || '';\n        if (estado && !d.Estado_Cohorte) d.Estado_Cohorte = estado;\n        const cohorte = r.cohorte || r.nombre_cohorte || r.cohort || r.grupo || '';\n        if (cohorte && !d.Cohorte) d.Cohorte = cohorte;\n\n      } else if (tabName === 'Cohortes') {\n        d.En_Cohortes = 'Si';\n        if (!d.Programa_Tecnico) d.Programa_Tecnico = programa;\n        const cohorte = r.cohorte || r.nombre_cohorte || r.cohort || r.nombre || r.grupo || '';\n        if (cohorte) d.Cohorte = cohorte;\n        const fi = r.fecha_inicio || r.inicio || r.fecha_inicio_cohorte || '';\n        const ff = r.fecha_fin    || r.fin    || r.fecha_fin_cohorte    || '';\n        if (fi) d.Fecha_Inicio_Cohorte = fi;\n        if (ff) d.Fecha_Fin_Cohorte    = ff;\n\n      } else if (tabName === 'Graduadx') {\n        d.En_Graduadx  = 'Si';\n        d.Estado_Cohorte = 'Graduadx';\n        if (!d.Programa_Tecnico) d.Programa_Tecnico = programa;\n\n      } else if (tabName === 'Retiradx') {\n        d.En_Retiradx = 'Si';\n        if (d.Estado_Cohorte !== 'Graduadx') d.Estado_Cohorte = 'Retiradx';\n        if (!d.Programa_Tecnico) d.Programa_Tecnico = programa;\n\n      } else if (tabName === 'Estipendios') {\n        d.En_Estipendios = 'Si';\n        d.Estipendios_Recibidos = (d.Estipendios_Recibidos || 0) + 1;\n        if (!d.Programa_Tecnico) d.Programa_Tecnico = programa;\n      }\n\n      if (!d._programas.includes(programa)) d._programas.push(programa);\n    });\n  });\n};\n\nprocesarRanges(techRanges, 'Formacion_Tech');\nprocesarRanges(aybRanges,  'Formacion_AyB');\n\n// Limpiar y fijar estado final\nObject.values(datos).forEach(d => {\n  if (d._programas.length > 1) d.Programa_Tecnico = d._programas.join(', ');\n  delete d._programas;\n  if (!d.Estado_Cohorte) d.Estado_Cohorte = 'Activx';\n});\n\nreturn [{ json: { datos, total: Object.keys(datos).length } }];"
       },
-      "id": "consolidar-programas-001",
+      "id": "d5542a02-2ec9-4617-a345-dc7409877dda",
       "name": "Consolidar Programas Tecnicos",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -727,10 +727,10 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "1",
+  "versionId": "5407c571-55bf-4809-a2d3-979dfdea7d0e",
   "meta": {
     "templateCredsSetupCompleted": true
   },
-  "id": "mega-tabla-il-001",
+  "id": "01e8b30a-13ba-4167-9034-397dc5e4f6bc",
   "tags": []
 }
