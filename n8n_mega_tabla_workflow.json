@@ -416,9 +416,34 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "https://sheets.googleapis.com/v4/spreadsheets/1En60zjrwPTrSMFrLUWr2KgXmH7y3vcopfpQgy6lY3HU/values:batchGet?ranges=%27Lista%20Definitiva%27!A:Z&ranges=Cohortes!A:Z&ranges=Graduadx!A:Z&ranges=Retiradx!A:Z&ranges=Estipendios!A:Z",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1En60zjrwPTrSMFrLUWr2KgXmH7y3vcopfpQgy6lY3HU/values:batchGet",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ranges",
+              "value": "Lista Definitiva!A:Z"
+            },
+            {
+              "name": "ranges",
+              "value": "Cohortes!A:Z"
+            },
+            {
+              "name": "ranges",
+              "value": "Graduadx!A:Z"
+            },
+            {
+              "name": "ranges",
+              "value": "Retiradx!A:Z"
+            },
+            {
+              "name": "ranges",
+              "value": "Estipendios!A:Z"
+            }
+          ]
+        },
         "options": {}
       },
       "id": "74438c70-2844-4f51-bda4-b4363027d3fe",
@@ -439,9 +464,34 @@
     {
       "parameters": {
         "method": "GET",
-        "url": "https://sheets.googleapis.com/v4/spreadsheets/1Ay1z3HdFHTzSjq7891sQVuEpIXBA8g9XGibjI-wFklc/values:batchGet?ranges=%27Lista%20Definitiva%27!A:Z&ranges=Cohortes!A:Z&ranges=Graduadx!A:Z&ranges=Retiradx!A:Z&ranges=Estipendios!A:Z",
+        "url": "https://sheets.googleapis.com/v4/spreadsheets/1Ay1z3HdFHTzSjq7891sQVuEpIXBA8g9XGibjI-wFklc/values:batchGet",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ranges",
+              "value": "Lista Definitiva!A:Z"
+            },
+            {
+              "name": "ranges",
+              "value": "Cohortes!A:Z"
+            },
+            {
+              "name": "ranges",
+              "value": "Graduadx!A:Z"
+            },
+            {
+              "name": "ranges",
+              "value": "Retiradx!A:Z"
+            },
+            {
+              "name": "ranges",
+              "value": "Estipendios!A:Z"
+            }
+          ]
+        },
         "options": {}
       },
       "id": "7d95a6c4-af5a-47b0-8d94-2150f02e7920",
