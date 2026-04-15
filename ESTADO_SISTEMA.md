@@ -28,6 +28,24 @@ KoboToolbox (12 formularios)
 `creamos_id` es el campo unico que identifica a cada participante y conecta
 todas las tablas entre si (y futuras tablas de otros programas).
 
+### Politica de privacidad (importante)
+
+**El sistema NO almacena informacion personal identificable (PII).** Solo se
+procesa `creamos_id` como identificador unico, mas campos demograficos no
+identificantes (edad, genero, nivel educativo) que son necesarios para la
+desagregacion de indicadores.
+
+Campos que **NO se guardan** en ninguna hoja:
+- Nombre, apellido, nombre_completo
+- Telefono, celular, whatsapp
+- Correo electronico
+- DPI, CUI, numero de documento
+- Direccion, colonia, zona, aldea, municipio
+- Fecha de nacimiento (solo se usa para calcular edad, luego se descarta)
+- Nombre de contacto de emergencia
+
+Cualquier registro sin `creamos_id` valido se descarta automaticamente.
+
 ---
 
 ## 2. Formularios conectados (12 formularios KoboToolbox)
@@ -60,7 +78,8 @@ todas las tablas entre si (y futuras tablas de otros programas).
 - **Que contiene**: 1 fila por participante con TODO consolidado
 - **Para que sirve**: Vista 360 de cada participante para Power BI
 - **Campos principales**:
-  - Datos demograficos (nombre, edad, genero, zona, nivel educativo)
+  - Identificador: `Creamos_ID` (unica llave, sin datos personales)
+  - Datos demograficos no identificantes (edad, genero, nivel educativo)
   - Estado por formulario (completado si/no, fecha, puntaje)
   - Avance general (% formularios, etapa actual, estado)
   - Comparacion Pre vs Post Test (delta, % cambio, resultado)
