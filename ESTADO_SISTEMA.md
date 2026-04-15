@@ -122,7 +122,8 @@ Cualquier registro sin `creamos_id` valido se descarta automaticamente.
 | Limpieza y normalizacion de datos | FUNCIONA | Campos flexibles, escala Likert automatica |
 | Deteccion inteligente de campos | FUNCIONA | Busca genero/edad/nivel sin importar nombre exacto del campo en Kobo |
 | Eliminacion de duplicados | FUNCIONA | Por creamos_id |
-| Master Sheet | FUNCIONA | Escritura via API directa (sin nodos Google Sheets para evitar error 429) |
+| Privacidad / sin PII | FUNCIONA | Solo creamos_id como identificador, sin nombres ni datos personales |
+| Master Sheet | FUNCIONA | Escritura via API directa, headers = union de todas las columnas |
 | Mega Tabla | FUNCIONA | 1 fila por participante consolidada |
 | PrePost | FUNCIONA | Comparacion Pre vs Post con delta y % cambio |
 | Indicadores IL | FUNCIONA | 9 indicadores con codigos CREAMOS |
@@ -130,6 +131,9 @@ Cualquier registro sin `creamos_id` valido se descarta automaticamente.
 | Desagregacion por nivel educativo | FUNCIONA | 6 categorias |
 | Desglose por anio | FUNCIONA | Indicadores separados por anio |
 | Columnas planas para Power BI | FUNCIONA | Sin JSON anidado, listo para tablas dinamicas |
+| Integracion Formacion Tech | FUNCIONA | Lee Lista Definitiva, Cohortes, Graduadx, Retiradx, Estipendios |
+| Integracion Formacion AyB | FUNCIONA | Mismas pestanas, join por creamos_id |
+| Cohorte y estado en Mega Tabla | FUNCIONA | Programa_Tecnico, Cohorte, Estado_Cohorte, Estipendios_Recibidos, En_* |
 
 ---
 
